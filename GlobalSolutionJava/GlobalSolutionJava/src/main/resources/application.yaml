@@ -1,0 +1,48 @@
+spring:
+#  rabbitmq:
+#    host: localhost
+#    port: 5672
+#    username: admin
+#    password: admin
+  application:
+    name: GlobalSolutionJava
+  messages:
+    basename: messages
+    encoding: UTF-8
+  data:
+    web:
+      pageable:
+        one-indexed-parameters: true
+
+  datasource:
+    url: jdbc:oracle:thin:@//oracle.fiap.com.br:1521/ORCL
+    username: RM556405
+    password: Fiap#2025
+    driver-class-name: oracle.jdbc.driver.OracleDriver
+    jpa:
+      database-platform: org.hibernate.dialect.OracleDialect
+      properties:
+        hibernate.format_sql: true
+    # spring.jpa.show-sql: true
+    # spring.jpa.hibernate.ddl-auto: create-drop
+    hikari:
+      maximum-pool-size: 1
+      minimum-idle: 1
+      pool-name: GlobalSolutionJavaHikariCP
+
+  port: 8080
+
+azure:
+  storage:
+    connection-string: DefaultEndpointsProtocol=https;AccountName=SEU_ACCOUNT;AccountKey=SUA_KEY;EndpointSuffix=core.windows.net
+    queue-name: minha-fila-teste
+
+api:
+  security:
+    token:
+      secret: ${JWT_SECRET:}
+
+gemini:
+  api:
+    key: ${GEMINI_API_KEY:}
+  model: ${GEMINI_MODEL:gemini-2.5-flash}
