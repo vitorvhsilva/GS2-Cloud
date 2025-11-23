@@ -9,7 +9,7 @@ O objetivo é permitir que qualquer pessoa — mesmo sem experiência — consig
 
 ---
 
-## 👤 Fluxo do Usuário
+##  Fluxo do Usuário
 
 ### **1. Cadastro**
 O usuário informa:
