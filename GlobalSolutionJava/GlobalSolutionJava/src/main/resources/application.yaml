@@ -15,12 +15,12 @@ spring:
         one-indexed-parameters: true
 
   datasource:
-    url: jdbc:oracle:thin:@//oracle.fiap.com.br:1521/ORCL
-    username: RM556405
-    password: Fiap#2025
-    driver-class-name: oracle.jdbc.driver.OracleDriver
+    url: ${DB_URL:jdbc:sqlserver://skillshiftsqlserver.database.windows.net:1433;database=SkillShiftDB;encrypt=true;trustServerCertificate=false;hostNameInCertificate=*.database.windows.net;loginTimeout=30;}
+    username: ${DB_USERNAME:sqladmin}
+    password: ${DB_PASSWORD:SenhaForte!123}
+    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
     jpa:
-      database-platform: org.hibernate.dialect.OracleDialect
+      database-platform: org.hibernate.dialect.SQLServerDialect
       properties:
         hibernate.format_sql: true
     # spring.jpa.show-sql: true
