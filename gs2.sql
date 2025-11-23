@@ -1,1422 +1,591 @@
-set verify off;
-set serveroutput on;
 
-drop table tb_conteudo_trilha_usuario cascade constraints;
-drop table tb_conteudo_trilha cascade constraints;
-drop table tb_formulario_profissao_usuario cascade constraints;
-drop table tb_endereco_usuario cascade constraints;
-drop table tb_trilha_usuario cascade constraints;
-drop table tb_trilha cascade constraints;
-drop table tb_usuario cascade constraints;
-drop table tb_auditoria cascade constraints;
+IF OBJECT_ID('dbo.tb_conteudo_trilha_usuario', 'U') IS NOT NULL DROP TABLE dbo.tb_conteudo_trilha_usuario;
+IF OBJECT_ID('dbo.tb_conteudo_trilha', 'U') IS NOT NULL DROP TABLE dbo.tb_conteudo_trilha;
+IF OBJECT_ID('dbo.tb_formulario_profissao_usuario', 'U') IS NOT NULL DROP TABLE dbo.tb_formulario_profissao_usuario;
+IF OBJECT_ID('dbo.tb_endereco_usuario', 'U') IS NOT NULL DROP TABLE dbo.tb_endereco_usuario;
+IF OBJECT_ID('dbo.tb_trilha_usuario', 'U') IS NOT NULL DROP TABLE dbo.tb_trilha_usuario;
+IF OBJECT_ID('dbo.tb_trilha', 'U') IS NOT NULL DROP TABLE dbo.tb_trilha;
+IF OBJECT_ID('dbo.tb_usuario', 'U') IS NOT NULL DROP TABLE dbo.tb_usuario;
+IF OBJECT_ID('dbo.tb_auditoria', 'U') IS NOT NULL DROP TABLE dbo.tb_auditoria;
+GO
 
-create table tb_usuario (
-    id_usuario              varchar2(36)  not null,
-    nome_usuario            varchar2(255) not null,
-    email_usuario           varchar2(255) not null,
-    senha_usuario           varchar2(255) not null,
-    data_nascimento_usuario timestamp     not null,
+/* Tables */
 
-    constraint tb_usuario_id_usuario_pk primary key (id_usuario)
+CREATE TABLE dbo.tb_usuario (
+    id_usuario varchar(36) NOT NULL PRIMARY KEY,
+    nome_usuario varchar(255) NOT NULL,
+    email_usuario varchar(255) NOT NULL,
+    senha_usuario varchar(255) NOT NULL,
+    data_nascimento_usuario datetime2 NOT NULL
 );
+GO
 
-
-create table tb_trilha (
-    id_trilha                  varchar2(36)  not null,
-    nome_trilha                varchar2(200) not null,
-    quantidade_conteudo_trilha number        not null,
-
-    constraint tb_trilha_id_trilha_pk primary key (id_trilha)
+CREATE TABLE dbo.tb_trilha (
+    id_trilha varchar(36) NOT NULL PRIMARY KEY,
+    nome_trilha varchar(200) NOT NULL,
+    quantidade_conteudo_trilha int NOT NULL
 );
+GO
 
-
-create table tb_conteudo_trilha (
-    id_conteudo_trilha          varchar2(36)   not null,
-    nome_conteudo_trilha        varchar2(200)  not null,
-    tipo_conteudo_trilha        varchar2(20)   not null,
-    texto_conteudo_trilha       varchar2(3000) not null,
-    id_trilha                   varchar2(36)   not null,
-
-    constraint tb_conteudo_trilha_id_conteudo_trilha_pk primary key (id_conteudo_trilha),
-    constraint tb_conteudo_trilha_id_trilha_fk foreign key (id_trilha)
-        references tb_trilha (id_trilha)
+CREATE TABLE dbo.tb_conteudo_trilha (
+    id_conteudo_trilha varchar(36) NOT NULL PRIMARY KEY,
+    nome_conteudo_trilha varchar(200) NOT NULL,
+    tipo_conteudo_trilha varchar(20) NOT NULL,
+    texto_conteudo_trilha varchar(max) NOT NULL,
+    id_trilha varchar(36) NOT NULL,
+    CONSTRAINT fk_conteudo_trilha_trilha FOREIGN KEY (id_trilha)
+        REFERENCES dbo.tb_trilha(id_trilha)
 );
+GO
 
-
-create table tb_conteudo_trilha_usuario (
-    id_conteudo_trilha_usuario        varchar2(36) not null,
-    conteudo_trilha_concluida_usuario char(1),
-    id_usuario                        varchar2(36) not null,
-    id_conteudo_trilha                varchar2(36) not null,
-
-    constraint tb_conteudo_trilha_usuario_id_conteudo_trilha_usuario_pk primary key (id_conteudo_trilha_usuario),
-    constraint tb_conteudo_trilha_usuario_id_conteudo_trilha foreign key (id_conteudo_trilha)
-        references tb_conteudo_trilha (id_conteudo_trilha),
-    constraint tb_conteudo_trilha_usuario_id_usuario foreign key (id_usuario)
-        references tb_usuario (id_usuario)
+CREATE TABLE dbo.tb_conteudo_trilha_usuario (
+    id_conteudo_trilha_usuario varchar(36) NOT NULL PRIMARY KEY,
+    conteudo_trilha_concluida_usuario char(1) NULL,
+    id_usuario varchar(36) NOT NULL,
+    id_conteudo_trilha varchar(36) NOT NULL,
+    CONSTRAINT fk_ctu_conteudo FOREIGN KEY (id_conteudo_trilha) REFERENCES dbo.tb_conteudo_trilha(id_conteudo_trilha),
+    CONSTRAINT fk_ctu_usuario FOREIGN KEY (id_usuario) REFERENCES dbo.tb_usuario(id_usuario)
 );
+GO
 
-
-create table tb_endereco_usuario (
-    id_usuario          varchar2(36) not null,
-    cep_endereco        varchar2(20) not null,
-    logradouro_endereco varchar2(200),
-    estado_endereco     varchar2(200),
-
-    constraint tb_endereco_usuario_id_usuario_pk primary key (id_usuario),
-    constraint tb_endereco_usuario_id_usuario_fk foreign key (id_usuario)
-        references tb_usuario (id_usuario)
+CREATE TABLE dbo.tb_endereco_usuario (
+    id_usuario varchar(36) NOT NULL PRIMARY KEY,
+    cep_endereco varchar(20) NOT NULL,
+    logradouro_endereco varchar(200) NULL,
+    estado_endereco varchar(200) NULL,
+    CONSTRAINT fk_end_usuario FOREIGN KEY (id_usuario) REFERENCES dbo.tb_usuario(id_usuario)
 );
+GO
 
-
-create table tb_formulario_profissao_usuario (
-    id_usuario            varchar2(36) not null,
-    resposta_pergunta_1   varchar2(1000),
-    resposta_pergunta_2   varchar2(1000),
-    resposta_pergunta_3   varchar2(1000),
-    resposta_pergunta_4   varchar2(1000),
-    resposta_pergunta_5   varchar2(1000),
-    resposta_pergunta_6   varchar2(1000),
-    resposta_pergunta_7   varchar2(1000),
-    resposta_pergunta_8   varchar2(1000),
-    resposta_pergunta_9   varchar2(1000),
-    resposta_pergunta_10  varchar2(1000),
-    profissao_recomendada varchar2(100),
-
-    constraint tb_formulario_profissao_usuario_id_usuario_pk primary key (id_usuario),
-    constraint tb_formulario_profissao_usuario_id_usuario_fk foreign key (id_usuario)
-        references tb_usuario (id_usuario)
+CREATE TABLE dbo.tb_formulario_profissao_usuario (
+    id_usuario varchar(36) NOT NULL PRIMARY KEY,
+    resposta_pergunta_1 varchar(1000) NULL,
+    resposta_pergunta_2 varchar(1000) NULL,
+    resposta_pergunta_3 varchar(1000) NULL,
+    resposta_pergunta_4 varchar(1000) NULL,
+    resposta_pergunta_5 varchar(1000) NULL,
+    resposta_pergunta_6 varchar(1000) NULL,
+    resposta_pergunta_7 varchar(1000) NULL,
+    resposta_pergunta_8 varchar(1000) NULL,
+    resposta_pergunta_9 varchar(1000) NULL,
+    resposta_pergunta_10 varchar(1000) NULL,
+    profissao_recomendada varchar(100) NULL,
+    CONSTRAINT fk_form_usuario FOREIGN KEY (id_usuario) REFERENCES dbo.tb_usuario(id_usuario)
 );
+GO
 
-
-create table tb_trilha_usuario (
-    id_trilha_usuario        varchar2(36) not null,
-    id_usuario               varchar2(36) not null,
-    id_trilha                varchar2(36) not null,
-    trilha_concluida_usuario char(1),
-
-    constraint tb_trilha_usuario_id_trilha_usuario_pk primary key (id_trilha_usuario),
-    constraint tb_trilha_usuario_id_trilha_fk foreign key (id_trilha)
-        references tb_trilha (id_trilha),
-    constraint tb_trilha_usuario_id_usuario_fk foreign key (id_usuario)
-        references tb_usuario (id_usuario)
+CREATE TABLE dbo.tb_trilha_usuario (
+    id_trilha_usuario varchar(36) NOT NULL PRIMARY KEY,
+    id_usuario varchar(36) NOT NULL,
+    id_trilha varchar(36) NOT NULL,
+    trilha_concluida_usuario char(1) NULL,
+    CONSTRAINT fk_trilha_usuario_trilha FOREIGN KEY (id_trilha) REFERENCES dbo.tb_trilha(id_trilha),
+    CONSTRAINT fk_trilha_usuario_usuario FOREIGN KEY (id_usuario) REFERENCES dbo.tb_usuario(id_usuario)
 );
+GO
 
-
--- AUDITORIA
-
-create table tb_auditoria (
-    id_auditoria    varchar2(36) default sys_guid() primary key,
-    nome_tabela     varchar2(100),
-    operacao        varchar2(10),
-    registro        varchar2(3000),
-    data_operacao   timestamp
+CREATE TABLE dbo.tb_auditoria (
+    id_auditoria varchar(36) NOT NULL DEFAULT (CONVERT(varchar(36), NEWID())) PRIMARY KEY,
+    nome_tabela varchar(100) NULL,
+    operacao varchar(10) NULL,
+    registro varchar(max) NULL,
+    data_operacao datetime2 NULL
 );
-
-create or replace trigger trg_au_tb_usuario
-after insert or update or delete on tb_usuario
-for each row
-declare
-    v_registro varchar2(32767);
-    v_old_dt   varchar2(19);
-    v_new_dt   varchar2(19);
-begin
-    -- formata datas para string (evita null concatenation)
-    if :old.data_nascimento_usuario is not null then
-        v_old_dt := to_char(:old.data_nascimento_usuario, 'yyyy-mm-dd hh24:mi:ss');
-    else
-        v_old_dt := null;
-    end if;
-
-    if :new.data_nascimento_usuario is not null then
-        v_new_dt := to_char(:new.data_nascimento_usuario, 'yyyy-mm-dd hh24:mi:ss');
-    else
-        v_new_dt := null;
-    end if;
-
-    if inserting then
-        v_registro :=
-              'id_usuario=' || nvl(:new.id_usuario, '') || '; '
-            || 'nome_usuario=' || nvl(:new.nome_usuario, '') || '; '
-            || 'email_usuario=' || nvl(:new.email_usuario, '') || '; '
-            || 'senha_usuario=' || nvl(:new.senha_usuario, '') || '; '
-            || 'data_nascimento_usuario=' || nvl(v_new_dt, '');
-
-        insert into tb_auditoria (nome_tabela, operacao, registro, data_operacao)
-        values ('tb_usuario', 'insert', v_registro, systimestamp);
-
-    elsif updating then
-        v_registro :=
-              'id_usuario=' || nvl(:new.id_usuario, '') || '; '
-            || 'nome_usuario(old)=' || nvl(:old.nome_usuario, '') || ' -> nome_usuario(new)=' || nvl(:new.nome_usuario, '') || '; '
-            || 'email_usuario(old)=' || nvl(:old.email_usuario, '') || ' -> email_usuario(new)=' || nvl(:new.email_usuario, '') || '; '
-            || 'senha_usuario(old)=' || nvl(:old.senha_usuario, '') || ' -> senha_usuario(new)=' || nvl(:new.senha_usuario, '') || '; '
-            || 'data_nascimento_usuario(old)=' || nvl(v_old_dt, '') || ' -> data_nascimento_usuario(new)=' || nvl(v_new_dt, '');
-
-        insert into tb_auditoria (nome_tabela, operacao, registro, data_operacao)
-        values ('tb_usuario', 'update', v_registro, systimestamp);
-
-    elsif deleting then
-        v_registro :=
-              'id_usuario=' || nvl(:old.id_usuario, '') || '; '
-            || 'nome_usuario=' || nvl(:old.nome_usuario, '') || '; '
-            || 'email_usuario=' || nvl(:old.email_usuario, '') || '; '
-            || 'senha_usuario=' || nvl(:old.senha_usuario, '') || '; '
-            || 'data_nascimento_usuario=' || nvl(v_old_dt, '');
-
-        insert into tb_auditoria (nome_tabela, operacao, registro, data_operacao)
-        values ('tb_usuario', 'delete', v_registro, systimestamp);
-    end if;
-end;
-/
-
-create or replace trigger trg_au_tb_trilha
-after insert or update or delete on tb_trilha
-for each row
-declare
-    v_registro varchar2(32767);
-begin
-    if inserting then
-        v_registro :=
-              'id_trilha=' || nvl(:new.id_trilha, '') || '; '
-            || 'nome_trilha=' || nvl(:new.nome_trilha, '') || '; '
-            || 'quantidade_conteudo_trilha=' || nvl(to_char(:new.quantidade_conteudo_trilha), '');
-
-        insert into tb_auditoria (nome_tabela, operacao, registro, data_operacao)
-        values ('tb_trilha', 'insert', v_registro, systimestamp);
-
-    elsif updating then
-        v_registro :=
-              'id_trilha=' || nvl(:new.id_trilha, '') || '; '
-            || 'nome_trilha(old)=' || nvl(:old.nome_trilha, '') 
-            || ' -> nome_trilha(new)=' || nvl(:new.nome_trilha, '') || '; '
-            || 'quantidade_conteudo_trilha(old)=' || nvl(to_char(:old.quantidade_conteudo_trilha), '')
-            || ' -> quantidade_conteudo_trilha(new)=' || nvl(to_char(:new.quantidade_conteudo_trilha), '');
-
-        insert into tb_auditoria (nome_tabela, operacao, registro, data_operacao)
-        values ('tb_trilha', 'update', v_registro, systimestamp);
-
-    elsif deleting then
-        v_registro :=
-              'id_trilha=' || nvl(:old.id_trilha, '') || '; '
-            || 'nome_trilha=' || nvl(:old.nome_trilha, '') || '; '
-            || 'quantidade_conteudo_trilha=' || nvl(to_char(:old.quantidade_conteudo_trilha), '');
-
-        insert into tb_auditoria (nome_tabela, operacao, registro, data_operacao)
-        values ('tb_trilha', 'delete', v_registro, systimestamp);
-    end if;
-end;
-/
-
-create or replace trigger trg_au_tb_conteudo_trilha
-after insert or update or delete on tb_conteudo_trilha
-for each row
-declare
-    v_registro varchar2(32767);
-begin
-    if inserting then
-        v_registro :=
-              'id_conteudo_trilha=' || nvl(:new.id_conteudo_trilha, '') || '; '
-            || 'nome_conteudo_trilha=' || nvl(:new.nome_conteudo_trilha, '') || '; '
-            || 'tipo_conteudo_trilha=' || nvl(:new.tipo_conteudo_trilha, '') || '; '
-            || 'texto_conteudo_trilha=' || nvl(:new.texto_conteudo_trilha, '') || '; '
-            || 'id_trilha=' || nvl(:new.id_trilha, '');
-
-        insert into tb_auditoria (nome_tabela, operacao, registro, data_operacao)
-        values ('tb_conteudo_trilha', 'insert', v_registro, systimestamp);
-
-    elsif updating then
-        v_registro :=
-              'id_conteudo_trilha=' || nvl(:new.id_conteudo_trilha, '') || '; '
-            || 'nome_conteudo_trilha(old)=' || nvl(:old.nome_conteudo_trilha, '') 
-            || ' -> (new)=' || nvl(:new.nome_conteudo_trilha, '') || '; '
-            || 'tipo_conteudo_trilha(old)=' || nvl(:old.tipo_conteudo_trilha, '') 
-            || ' -> (new)=' || nvl(:new.tipo_conteudo_trilha, '') || '; '
-            || 'texto_conteudo_trilha(old)=' || nvl(:old.texto_conteudo_trilha, '') 
-            || ' -> (new)=' || nvl(:new.texto_conteudo_trilha, '') || '; '
-            || 'id_trilha(old)=' || nvl(:old.id_trilha, '') 
-            || ' -> (new)=' || nvl(:new.id_trilha, '');
-
-        insert into tb_auditoria (nome_tabela, operacao, registro, data_operacao)
-        values ('tb_conteudo_trilha', 'update', v_registro, systimestamp);
-
-    elsif deleting then
-        v_registro :=
-              'id_conteudo_trilha=' || nvl(:old.id_conteudo_trilha, '') || '; '
-            || 'nome_conteudo_trilha=' || nvl(:old.nome_conteudo_trilha, '') || '; '
-            || 'tipo_conteudo_trilha=' || nvl(:old.tipo_conteudo_trilha, '') || '; '
-            || 'texto_conteudo_trilha=' || nvl(:old.texto_conteudo_trilha, '') || '; '
-            || 'id_trilha=' || nvl(:old.id_trilha, '');
-
-        insert into tb_auditoria (nome_tabela, operacao, registro, data_operacao)
-        values ('tb_conteudo_trilha', 'delete', v_registro, systimestamp);
-    end if;
-end;
-/
-
-create or replace trigger trg_au_tb_conteudo_trilha_usuario
-after insert or update or delete on tb_conteudo_trilha_usuario
-for each row
-declare
-    v_registro varchar2(32767);
-begin
-    if inserting then
-        v_registro :=
-              'id_conteudo_trilha_usuario=' || nvl(:new.id_conteudo_trilha_usuario, '') || '; '
-            || 'conteudo_trilha_concluida_usuario=' || nvl(:new.conteudo_trilha_concluida_usuario, '') || '; '
-            || 'id_usuario=' || nvl(:new.id_usuario, '') || '; '
-            || 'id_conteudo_trilha=' || nvl(:new.id_conteudo_trilha, '');
-
-        insert into tb_auditoria (nome_tabela, operacao, registro, data_operacao)
-        values ('tb_conteudo_trilha_usuario', 'insert', v_registro, systimestamp);
-
-    elsif updating then
-        v_registro :=
-              'id_conteudo_trilha_usuario=' || nvl(:new.id_conteudo_trilha_usuario, '') || '; '
-            || 'conteudo_trilha_concluida_usuario(old)=' || nvl(:old.conteudo_trilha_concluida_usuario, '')
-            || ' -> (new)=' || nvl(:new.conteudo_trilha_concluida_usuario, '') || '; '
-            || 'id_usuario(old)=' || nvl(:old.id_usuario, '')
-            || ' -> (new)=' || nvl(:new.id_usuario, '') || '; '
-            || 'id_conteudo_trilha(old)=' || nvl(:old.id_conteudo_trilha, '')
-            || ' -> (new)=' || nvl(:new.id_conteudo_trilha, '');
-
-        insert into tb_auditoria (nome_tabela, operacao, registro, data_operacao)
-        values ('tb_conteudo_trilha_usuario', 'update', v_registro, systimestamp);
-
-    elsif deleting then
-        v_registro :=
-              'id_conteudo_trilha_usuario=' || nvl(:old.id_conteudo_trilha_usuario, '') || '; '
-            || 'conteudo_trilha_concluida_usuario=' || nvl(:old.conteudo_trilha_concluida_usuario, '') || '; '
-            || 'id_usuario=' || nvl(:old.id_usuario, '') || '; '
-            || 'id_conteudo_trilha=' || nvl(:old.id_conteudo_trilha, '');
-
-        insert into tb_auditoria (nome_tabela, operacao, registro, data_operacao)
-        values ('tb_conteudo_trilha_usuario', 'delete', v_registro, systimestamp);
-    end if;
-end;
-/
-
-create or replace trigger trg_au_tb_endereco_usuario
-after insert or update or delete on tb_endereco_usuario
-for each row
-declare
-    v_registro varchar2(32767);
-begin
-    if inserting then
-        v_registro :=
-              'id_usuario=' || nvl(:new.id_usuario, '') || '; '
-            || 'cep_endereco=' || nvl(:new.cep_endereco, '') || '; '
-            || 'logradouro_endereco=' || nvl(:new.logradouro_endereco, '') || '; '
-            || 'estado_endereco=' || nvl(:new.estado_endereco, '');
-
-        insert into tb_auditoria (nome_tabela, operacao, registro, data_operacao)
-        values ('tb_endereco_usuario', 'insert', v_registro, systimestamp);
-
-    elsif updating then
-        v_registro :=
-              'id_usuario=' || nvl(:new.id_usuario, '') || '; '
-            || 'cep_endereco(old)=' || nvl(:old.cep_endereco, '') 
-            || ' -> (new)=' || nvl(:new.cep_endereco, '') || '; '
-            || 'logradouro_endereco(old)=' || nvl(:old.logradouro_endereco, '') 
-            || ' -> (new)=' || nvl(:new.logradouro_endereco, '') || '; '
-            || 'estado_endereco(old)=' || nvl(:old.estado_endereco, '') 
-            || ' -> (new)=' || nvl(:new.estado_endereco, '');
-
-        insert into tb_auditoria (nome_tabela, operacao, registro, data_operacao)
-        values ('tb_endereco_usuario', 'update', v_registro, systimestamp);
-
-    elsif deleting then
-        v_registro :=
-              'id_usuario=' || nvl(:old.id_usuario, '') || '; '
-            || 'cep_endereco=' || nvl(:old.cep_endereco, '') || '; '
-            || 'logradouro_endereco=' || nvl(:old.logradouro_endereco, '') || '; '
-            || 'estado_endereco=' || nvl(:old.estado_endereco, '');
-
-        insert into tb_auditoria (nome_tabela, operacao, registro, data_operacao)
-        values ('tb_endereco_usuario', 'delete', v_registro, systimestamp);
-    end if;
-end;
-/
-
-create or replace trigger trg_au_tb_formulario_profissao_usuario
-after insert or update or delete on tb_formulario_profissao_usuario
-for each row
-declare
-    v_registro varchar2(32767);
-begin
-    if inserting then
-        v_registro :=
-              'id_usuario=' || nvl(:new.id_usuario, '') || '; '
-            || 'resposta_pergunta_1=' || nvl(:new.resposta_pergunta_1, '') || '; '
-            || 'resposta_pergunta_2=' || nvl(:new.resposta_pergunta_2, '') || '; '
-            || 'resposta_pergunta_3=' || nvl(:new.resposta_pergunta_3, '') || '; '
-            || 'resposta_pergunta_4=' || nvl(:new.resposta_pergunta_4, '') || '; '
-            || 'resposta_pergunta_5=' || nvl(:new.resposta_pergunta_5, '') || '; '
-            || 'resposta_pergunta_6=' || nvl(:new.resposta_pergunta_6, '') || '; '
-            || 'resposta_pergunta_7=' || nvl(:new.resposta_pergunta_7, '') || '; '
-            || 'resposta_pergunta_8=' || nvl(:new.resposta_pergunta_8, '') || '; '
-            || 'resposta_pergunta_9=' || nvl(:new.resposta_pergunta_9, '') || '; '
-            || 'resposta_pergunta_10=' || nvl(:new.resposta_pergunta_10, '') || '; '
-            || 'profissao_recomendada=' || nvl(:new.profissao_recomendada, '');
-
-        insert into tb_auditoria (nome_tabela, operacao, registro, data_operacao)
-        values ('tb_formulario_profissao_usuario', 'insert', v_registro, systimestamp);
-
-    elsif updating then
-        v_registro :=
-              'id_usuario=' || nvl(:new.id_usuario, '') || '; '
-            || 'resposta_pergunta_1(old)=' || nvl(:old.resposta_pergunta_1, '') || ' -> (new)=' || nvl(:new.resposta_pergunta_1, '') || '; '
-            || 'resposta_pergunta_2(old)=' || nvl(:old.resposta_pergunta_2, '') || ' -> (new)=' || nvl(:new.resposta_pergunta_2, '') || '; '
-            || 'resposta_pergunta_3(old)=' || nvl(:old.resposta_pergunta_3, '') || ' -> (new)=' || nvl(:new.resposta_pergunta_3, '') || '; '
-            || 'resposta_pergunta_4(old)=' || nvl(:old.resposta_pergunta_4, '') || ' -> (new)=' || nvl(:new.resposta_pergunta_4, '') || '; '
-            || 'resposta_pergunta_5(old)=' || nvl(:old.resposta_pergunta_5, '') || ' -> (new)=' || nvl(:new.resposta_pergunta_5, '') || '; '
-            || 'resposta_pergunta_6(old)=' || nvl(:old.resposta_pergunta_6, '') || ' -> (new)=' || nvl(:new.resposta_pergunta_6, '') || '; '
-            || 'resposta_pergunta_7(old)=' || nvl(:old.resposta_pergunta_7, '') || ' -> (new)=' || nvl(:new.resposta_pergunta_7, '') || '; '
-            || 'resposta_pergunta_8(old)=' || nvl(:old.resposta_pergunta_8, '') || ' -> (new)=' || nvl(:new.resposta_pergunta_8, '') || '; '
-            || 'resposta_pergunta_9(old)=' || nvl(:old.resposta_pergunta_9, '') || ' -> (new)=' || nvl(:new.resposta_pergunta_9, '') || '; '
-            || 'resposta_pergunta_10(old)=' || nvl(:old.resposta_pergunta_10, '') || ' -> (new)=' || nvl(:new.resposta_pergunta_10, '') || '; '
-            || 'profissao_recomendada(old)=' || nvl(:old.profissao_recomendada, '') || ' -> (new)=' || nvl(:new.profissao_recomendada, '');
-
-        insert into tb_auditoria (nome_tabela, operacao, registro, data_operacao)
-        values ('tb_formulario_profissao_usuario', 'update', v_registro, systimestamp);
-
-    elsif deleting then
-        v_registro :=
-              'id_usuario=' || nvl(:old.id_usuario, '') || '; '
-            || 'resposta_pergunta_1=' || nvl(:old.resposta_pergunta_1, '') || '; '
-            || 'resposta_pergunta_2=' || nvl(:old.resposta_pergunta_2, '') || '; '
-            || 'resposta_pergunta_3=' || nvl(:old.resposta_pergunta_3, '') || '; '
-            || 'resposta_pergunta_4=' || nvl(:old.resposta_pergunta_4, '') || '; '
-            || 'resposta_pergunta_5=' || nvl(:old.resposta_pergunta_5, '') || '; '
-            || 'resposta_pergunta_6=' || nvl(:old.resposta_pergunta_6, '') || '; '
-            || 'resposta_pergunta_7=' || nvl(:old.resposta_pergunta_7, '') || '; '
-            || 'resposta_pergunta_8=' || nvl(:old.resposta_pergunta_8, '') || '; '
-            || 'resposta_pergunta_9=' || nvl(:old.resposta_pergunta_9, '') || '; '
-            || 'resposta_pergunta_10=' || nvl(:old.resposta_pergunta_10, '') || '; '
-            || 'profissao_recomendada=' || nvl(:old.profissao_recomendada, '');
-
-        insert into tb_auditoria (nome_tabela, operacao, registro, data_operacao)
-        values ('tb_formulario_profissao_usuario', 'delete', v_registro, systimestamp);
-    end if;
-end;
-/
-
-
-
-create or replace trigger trg_au_tb_trilha_usuario
-after insert or update or delete on tb_trilha_usuario
-for each row
-declare
-    v_registro varchar2(32767);
-begin
-    if inserting then
-        v_registro :=
-              'id_trilha_usuario=' || nvl(:new.id_trilha_usuario, '') || '; '
-            || 'id_usuario=' || nvl(:new.id_usuario, '') || '; '
-            || 'id_trilha=' || nvl(:new.id_trilha, '') || '; '
-            || 'trilha_concluida_usuario=' || nvl(:new.trilha_concluida_usuario, '');
-
-        insert into tb_auditoria (nome_tabela, operacao, registro, data_operacao)
-        values ('tb_trilha_usuario', 'insert', v_registro, systimestamp);
-
-    elsif updating then
-        v_registro :=
-              'id_trilha_usuario=' || nvl(:new.id_trilha_usuario, '') || '; '
-            || 'id_usuario(old)=' || nvl(:old.id_usuario, '') 
-            || ' -> (new)=' || nvl(:new.id_usuario, '') || '; '
-            || 'id_trilha(old)=' || nvl(:old.id_trilha, '') 
-            || ' -> (new)=' || nvl(:new.id_trilha, '') || '; '
-            || 'trilha_concluida_usuario(old)=' || nvl(:old.trilha_concluida_usuario, '') 
-            || ' -> (new)=' || nvl(:new.trilha_concluida_usuario, '');
-
-        insert into tb_auditoria (nome_tabela, operacao, registro, data_operacao)
-        values ('tb_trilha_usuario', 'update', v_registro, systimestamp);
-
-    elsif deleting then
-        v_registro :=
-              'id_trilha_usuario=' || nvl(:old.id_trilha_usuario, '') || '; '
-            || 'id_usuario=' || nvl(:old.id_usuario, '') || '; '
-            || 'id_trilha=' || nvl(:old.id_trilha, '') || '; '
-            || 'trilha_concluida_usuario=' || nvl(:old.trilha_concluida_usuario, '');
-
-        insert into tb_auditoria (nome_tabela, operacao, registro, data_operacao)
-        values ('tb_trilha_usuario', 'delete', v_registro, systimestamp);
-    end if;
-end;
-/
-
-
-
--- INSERTS
-
-create or replace package pkg_inserts as
-    procedure inserir_usuario(
-        p_id_usuario in varchar2,
-        p_nome_usuario in varchar2,
-        p_email_usuario in varchar2,
-        p_senha_usuario in varchar2,
-        p_data_nascimento in timestamp
-    );
-
-    procedure inserir_trilha(
-        p_id_trilha in varchar2,
-        p_nome_trilha in varchar2,
-        p_qtd_conteudo in varchar2
-    );
-
-    procedure inserir_conteudo_trilha(
-        p_id_conteudo in varchar2,
-        p_nome_conteudo in varchar2,
-        p_tipo_conteudo in varchar2,
-        p_texto_conteudo in varchar2,
-        p_id_trilha in varchar2
-    );
-
-    procedure inserir_conteudo_trilha_usuario(
-        p_id_ctu in varchar2,
-        p_concluido in char,
-        p_id_usuario in varchar2,
-        p_id_conteudo in varchar2
-    );
-
-    procedure inserir_endereco_usuario(
-        p_id_usuario in varchar2,
-        p_cep in varchar2,
-        p_logradouro in varchar2,
-        p_estado in varchar2
-    );
-
-    procedure inserir_formulario_profissao(
-        p_id_usuario in varchar2,
-        p_p1 in varchar2,
-        p_p2 in varchar2,
-        p_p3 in varchar2,
-        p_p4 in varchar2,
-        p_p5 in varchar2,
-        p_p6 in varchar2,
-        p_p7 in varchar2,
-        p_p8 in varchar2,
-        p_p9 in varchar2,
-        p_p10 in varchar2,
-        p_recomendada in varchar2
-    );
-
-    procedure inserir_trilha_usuario(
-        p_id_trilha_usuario in varchar2,
-        p_id_usuario in varchar2,
-        p_id_trilha in varchar2,
-        p_concluida in char
-    );
-end pkg_inserts;
-/
-
-create or replace package body pkg_inserts as
-
-    procedure inserir_usuario(
-        p_id_usuario in varchar2,
-        p_nome_usuario in varchar2,
-        p_email_usuario in varchar2,
-        p_senha_usuario in varchar2,
-        p_data_nascimento in timestamp
-    ) as
-    begin
-        insert into tb_usuario (
-            id_usuario, nome_usuario, email_usuario, senha_usuario, data_nascimento_usuario
-        ) values (
-            p_id_usuario, p_nome_usuario, p_email_usuario, p_senha_usuario, p_data_nascimento
-        );
-    end inserir_usuario;
-
-
-    procedure inserir_trilha(
-        p_id_trilha in varchar2,
-        p_nome_trilha in varchar2,
-        p_qtd_conteudo in varchar2
-    ) as
-    begin
-        insert into tb_trilha (
-            id_trilha, nome_trilha, quantidade_conteudo_trilha
-        ) values (
-            p_id_trilha, p_nome_trilha, p_qtd_conteudo
-        );
-    end inserir_trilha;
-
-
-    procedure inserir_conteudo_trilha(
-        p_id_conteudo in varchar2,
-        p_nome_conteudo in varchar2,
-        p_tipo_conteudo in varchar2,
-        p_texto_conteudo in varchar2,
-        p_id_trilha in varchar2
-    ) as
-    begin
-        insert into tb_conteudo_trilha (
-            id_conteudo_trilha, nome_conteudo_trilha, tipo_conteudo_trilha, texto_conteudo_trilha, id_trilha
-        ) values (
-            p_id_conteudo, p_nome_conteudo, p_tipo_conteudo, p_texto_conteudo, p_id_trilha
-        );
-    end inserir_conteudo_trilha;
-
-
-    procedure inserir_conteudo_trilha_usuario(
-        p_id_ctu in varchar2,
-        p_concluido in char,
-        p_id_usuario in varchar2,
-        p_id_conteudo in varchar2
-    ) as
-    begin
-        insert into tb_conteudo_trilha_usuario(
-            id_conteudo_trilha_usuario, conteudo_trilha_concluida_usuario,
-            id_usuario, id_conteudo_trilha
-        ) values (
-            p_id_ctu, p_concluido, p_id_usuario, p_id_conteudo
-        );
-    end inserir_conteudo_trilha_usuario;
-
-
-    procedure inserir_endereco_usuario(
-        p_id_usuario in varchar2,
-        p_cep in varchar2,
-        p_logradouro in varchar2,
-        p_estado in varchar2
-    ) as
-    begin
-        insert into tb_endereco_usuario(
-            id_usuario, cep_endereco, logradouro_endereco, estado_endereco
-        ) values (
-            p_id_usuario, p_cep, p_logradouro, p_estado
-        );
-    end inserir_endereco_usuario;
-
-
-    procedure inserir_formulario_profissao(
-        p_id_usuario in varchar2,
-        p_p1 in varchar2,
-        p_p2 in varchar2,
-        p_p3 in varchar2,
-        p_p4 in varchar2,
-        p_p5 in varchar2,
-        p_p6 in varchar2,
-        p_p7 in varchar2,
-        p_p8 in varchar2,
-        p_p9 in varchar2,
-        p_p10 in varchar2,
-        p_recomendada in varchar2
-    ) as
-    begin
-        insert into tb_formulario_profissao_usuario(
-            id_usuario, resposta_pergunta_1, resposta_pergunta_2,
-            resposta_pergunta_3, resposta_pergunta_4, resposta_pergunta_5,
-            resposta_pergunta_6, resposta_pergunta_7, resposta_pergunta_8,
-            resposta_pergunta_9, resposta_pergunta_10, profissao_recomendada
-        ) values (
-            p_id_usuario, p_p1, p_p2, p_p3, p_p4, p_p5, p_p6, p_p7,
-            p_p8, p_p9, p_p10, p_recomendada
-        );
-    end inserir_formulario_profissao;
-
-
-    procedure inserir_trilha_usuario(
-        p_id_trilha_usuario in varchar2,
-        p_id_usuario in varchar2,
-        p_id_trilha in varchar2,
-        p_concluida in char
-    ) as
-    begin
-        insert into tb_trilha_usuario (
-            id_trilha_usuario, id_usuario, id_trilha, trilha_concluida_usuario
-        ) values (
-            p_id_trilha_usuario, p_id_usuario, p_id_trilha, p_concluida
-        );
-    end inserir_trilha_usuario;
-
-end pkg_inserts;
-/
-
-declare
-    v_u1  varchar2(36) := 'b0a5f2e7-879c-4a13-82ab-71f1b716de11';
-    v_u2  varchar2(36) := '5e5fc7b4-863d-4e8a-b0bb-c93a4360f972';
-    v_u3  varchar2(36) := 'd1e1faf0-1f4b-4e5e-b20e-61c1ea2cfa16';
-    v_u4  varchar2(36) := 'a8c98cb7-2477-4a77-9b18-d4c2c843d814';
-    v_u5  varchar2(36) := '1fd6c2a0-5ed9-4c8b-9e8c-85bc03f3e4d5';
-    v_u6  varchar2(36) := 'e2a0b2f5-32d6-412d-af4c-917b1f5fb35d';
-    v_u7  varchar2(36) := '07db33ad-fd10-4ef0-bc0b-30a69e6ac72d';
-    v_u8  varchar2(36) := '6bcff902-6e51-4a97-a7f3-3630b8979a2d';
-    v_u9  varchar2(36) := '3f29cdf1-4658-4fa4-81ef-d51ff6cba93b';
-    v_u10 varchar2(36) := 'c82ae200-0df6-4f6c-887a-a69e502435f8';
-begin
-    pkg_inserts.inserir_usuario(v_u1,  'Ana Silva',         'ana@email.com',     'senha1',  systimestamp);
-    pkg_inserts.inserir_usuario(v_u2,  'Jo„o Prado',        'joao@email.com',    'senha2',  systimestamp);
-    pkg_inserts.inserir_usuario(v_u3,  'Marina Costa',      'marina@email.com',  'senha3',  systimestamp);
-    pkg_inserts.inserir_usuario(v_u4,  'Pedro Gomes',       'pedro@email.com',   'senha4',  systimestamp);
-    pkg_inserts.inserir_usuario(v_u5,  'Carla Melo',        'carla@email.com',   'senha5',  systimestamp);
-    pkg_inserts.inserir_usuario(v_u6,  'Lucas Vieira',      'lucas@email.com',   'senha6',  systimestamp);
-    pkg_inserts.inserir_usuario(v_u7,  'Fernanda Dias',     'fernanda@email.com','senha7',  systimestamp);
-    pkg_inserts.inserir_usuario(v_u8,  'Gustavo Azevedo',   'guga@email.com',    'senha8',  systimestamp);
-    pkg_inserts.inserir_usuario(v_u9,  'Aline Braga',       'aline@email.com',   'senha9',  systimestamp);
-    pkg_inserts.inserir_usuario(v_u10, 'Ricardo Matos',     'ricardo@email.com', 'senha10', systimestamp);
-end;
-/
-
-declare
-    t1  varchar2(36) := 'f0c9f1b4-0cc9-44b3-b3da-7e51d241a4f5';
-    t2  varchar2(36) := '4c9eaa09-e28f-4f8f-a887-6b23fd2d1303';
-    t3  varchar2(36) := '0a170d80-cb63-4bb7-83d5-2a46f58fcd88';
-    t4  varchar2(36) := 'abfaadcb-eaf7-4fef-aa3b-e3c99e257a6d';
-    t5  varchar2(36) := 'ae8d00b7-3580-4c2a-b88e-734af5c30921';
-    t6  varchar2(36) := '95c907e1-5b3f-45b2-9bf0-10f2ade753f2';
-    t7  varchar2(36) := 'f45b7fa3-52e5-455c-80be-68b52ca90212';
-    t8  varchar2(36) := '024b5f75-a237-4e52-9cb5-66a3e655f6df';
-    t9  varchar2(36) := 'b337644e-eb7d-44b4-8c31-77ef4d9a9032';
-    t10 varchar2(36) := 'dcc7cd01-414b-4a4f-bf6b-4bc62e56b7cb';
-begin
-    pkg_inserts.inserir_trilha(t1,  'IntroduÁ„o ao Futuro do Trabalho', 3);
-    pkg_inserts.inserir_trilha(t2,  'InteligÍncia Artificial Aplicada', 3);
-    pkg_inserts.inserir_trilha(t3,  'Habilidades Digitais Essenciais', 3);
-    pkg_inserts.inserir_trilha(t4,  'Carreira em Tecnologia', 2);
-    pkg_inserts.inserir_trilha(t5,  'Empreendedorismo Moderno', 2);
-    pkg_inserts.inserir_trilha(t6,  'Produtividade e OrganizaÁ„o', 2);
-    pkg_inserts.inserir_trilha(t7,  'Soft Skills do Futuro', 3);
-    pkg_inserts.inserir_trilha(t8,  'Dados e Analytics', 2);
-    pkg_inserts.inserir_trilha(t9,  'Criatividade e InovaÁ„o', 2);
-    pkg_inserts.inserir_trilha(t10, 'LideranÁa e Gest„o', 3);
-end;
-/
-
-declare
-    t1  varchar2(36) := 'f0c9f1b4-0cc9-44b3-b3da-7e51d241a4f5';
-    t2  varchar2(36) := '4c9eaa09-e28f-4f8f-a887-6b23fd2d1303';
-    t3  varchar2(36) := '0a170d80-cb63-4bb7-83d5-2a46f58fcd88';
-    t4  varchar2(36) := 'abfaadcb-eaf7-4fef-aa3b-e3c99e257a6d';
-    t5  varchar2(36) := 'ae8d00b7-3580-4c2a-b88e-734af5c30921';
-    t6  varchar2(36) := '95c907e1-5b3f-45b2-9bf0-10f2ade753f2';
-    t7  varchar2(36) := 'f45b7fa3-52e5-455c-80be-68b52ca90212';
-    t8  varchar2(36) := '024b5f75-a237-4e52-9cb5-66a3e655f6df';
-    t9  varchar2(36) := 'b337644e-eb7d-44b4-8c31-77ef4d9a9032';
-    t10 varchar2(36) := 'dcc7cd01-414b-4a4f-bf6b-4bc62e56b7cb';
-begin
-    pkg_inserts.inserir_conteudo_trilha(
-        '9a7f2d1b-3c2a-4b9f-8a47-1e0c5d2a9f11',
-        'TendÍncias e Contexto',
-        'VÌdeo',
-        'https://www.youtube.com/watch?v=Lbk-EDaySmw',
-        t1
-    );
-    pkg_inserts.inserir_conteudo_trilha(
-        '2b8c6e3d-7f1a-4d2b-ab12-3f8a6d4c2b22',
-        'Habilidades Essenciais',
-        'Artigo',
-        'No cen·rio profissional contempor‚neo, onde mudanÁas acontecem em ritmo acelerado e novas tecnologias surgem a todo momento, desenvolver habilidades essenciais deixou de ser apenas uma vantagem competitiva ó tornou-se um requisito fundamental para qualquer pessoa que deseja se manter relevante no mercado de trabalho. Essas habilidades, que combinam competÍncias tÈcnicas e comportamentais, formam a base para que profissionais possam se adaptar, inovar e assumir papÈis cada vez mais estratÈgicos dentro das organizaÁıes.
-
-        Entre as habilidades tÈcnicas mais valorizadas atualmente, destacam-se a capacidade de analisar dados, compreender fluxos digitais e utilizar ferramentas de automaÁ„o para otimizar processos. Com a crescente presenÁa da inteligÍncia artificial em diferentes setores, entender conceitos b·sicos de aprendizado de m·quina, an·lise preditiva e integraÁıes tecnolÛgicas tambÈm se tornou um diferencial significativo. No entanto, t„o importante quanto saber operar novas ferramentas È a habilidade de aprender continuamente, mantendo-se atualizado e apto a lidar com mudanÁas constantes.
-
-        Do ponto de vista comportamental, habilidades como pensamento crÌtico, comunicaÁ„o clara e colaboraÁ„o eficaz s„o indispens·veis. Profissionais que conseguem avaliar situaÁıes de forma analÌtica, propor soluÁıes criativas e trabalhar de maneira integrada com equipes diversas tendem a liderar transformaÁıes e agregar mais valor ‡s empresas. AlÈm disso, a inteligÍncia emocional tem ganhado destaque, permitindo que indivÌduos lidem com press„o, adaptem-se a contextos incertos e cultivem relaÁıes saud·veis no ambiente de trabalho.
-
-        Por fim, a combinaÁ„o equilibrada entre habilidades tÈcnicas e comportamentais cria um perfil profissional completo, preparado para atuar em um mundo cada vez mais digital, din‚mico e orientado por dados. Investir no desenvolvimento dessas competÍncias n„o È apenas uma preparaÁ„o para o futuro ó È uma estratÈgia essencial para construir uma carreira sÛlida, resiliente e alinhada ‡s demandas do mercado moderno.',
-        t1
-    );
-    pkg_inserts.inserir_conteudo_trilha(
-        '4c3d9f5e-1a2b-43c4-bd55-6a9e7f8b3c33',
-        'PreparaÁ„o Pr·tica',
-        'VÌdeo',
-        'https://www.youtube.com/watch?v=7wG134Mby8c',
-        t1
-    );
-
-    pkg_inserts.inserir_conteudo_trilha(
-        '5d4e8a6f-2b3c-4f1a-9c22-7b8d6e5f4a44',
-        'Fundamentos de IA',
-        'Artigo',
-        'A InteligÍncia Artificial (IA) tornou-se um dos pilares tecnolÛgicos mais influentes da era digital, moldando a maneira como empresas, governos e indivÌduos interagem com dados, sistemas e processos automatizados. Compreender seus fundamentos È essencial para qualquer pessoa que deseja atuar em um mercado cada vez mais orientado por algoritmos e decisıes automatizadas. No nÌvel conceitual, a IA pode ser entendida como a capacidade de m·quinas executarem tarefas que tradicionalmente exigiriam inteligÍncia humana, como reconhecer padrıes, tomar decisıes, aprender com experiÍncias e atÈ mesmo compreender linguagem natural.
-
-        Entre os principais componentes da IA, destacam-se as redes neurais artificiais, inspiradas no funcionamento do cÈrebro humano. Essas redes s„o compostas por camadas de ìneurÙniosî capazes de aprender relaÁıes complexas entre dados, permitindo que modelos identifiquem padrıes que dificilmente seriam percebidos por mÈtodos tradicionais. Outro conceito essencial È a regress„o, utilizada para prever valores numÈricos a partir de um conjunto de vari·veis. J· os algoritmos de classificaÁ„o permitem categorizar dados em grupos distintos, sendo amplamente utilizados em ·reas como detecÁ„o de fraudes, diagnÛsticos mÈdicos e an·lise de imagens.
-
-        A IA tambÈm engloba tÈcnicas como processamento de linguagem natural, vis„o computacional e sistemas especialistas, que juntos formam um conjunto abrangente de ferramentas aplic·veis a diferentes setores. No entanto, antes de dominar as aplicaÁıes pr·ticas, È fundamental compreender os princÌpios teÛricos que sustentam essas tecnologias: como os modelos aprendem, como os dados influenciam os resultados e quais mÈtricas s„o utilizadas para avaliar a precis„o e o desempenho.
-
-        Dominar os fundamentos de IA significa adquirir a base necess·ria para navegar com seguranÁa em projetos reais, tomar decisıes informadas e entender tanto o potencial quanto as limitaÁıes dessa tecnologia. … o primeiro passo para explorar campos mais avanÁados, como aprendizado profundo, otimizaÁ„o de modelos e desenvolvimento de soluÁıes inteligentes de alto impacto.',
-        t2
-    );
-    pkg_inserts.inserir_conteudo_trilha(
-        '6e5f7b8c-3c4d-5a2b-8d33-8c9e7f6a5b55',
-        'Machine Learning Aplicado',
-        'VÌdeo',
-        'https://www.youtube.com/watch?v=0PrOA2JK6GQ',
-        t2
-    );
-    pkg_inserts.inserir_conteudo_trilha(
-        '7f6a8c9d-4d5e-6b3c-9e44-9d0f8a7b6c66',
-        'Casos Pr·ticos',
-        'Artigo',
-        'A aplicaÁ„o pr·tica de tÈcnicas de machine learning tem transformado diversas ind˙strias, demonstrando que algoritmos bem treinados podem gerar insights valiosos, automatizar processos complexos e resolver problemas que antes eram considerados desafiadores demais para abordagens tradicionais. Estudar casos reais È uma das melhores maneiras de entender como essas tecnologias se comportam em situaÁıes concretas, revelando tanto seu potencial quanto suas limitaÁıes.
-
-        Um dos exemplos mais emblem·ticos È o uso de modelos de classificaÁ„o para detecÁ„o autom·tica de fraudes em transaÁıes financeiras. InstituiÁıes banc·rias utilizam algoritmos que analisam padrıes de comportamento ó como hor·rios, valores e locais ó para identificar atividades suspeitas em tempo real. Esses sistemas aprendem continuamente com novos dados, tornando-se cada vez mais precisos na distinÁ„o entre transaÁıes legÌtimas e fraudulentas.
-
-        Na ·rea da sa˙de, modelos preditivos tÍm sido aplicados para auxiliar diagnÛsticos mÈdicos, detectando doenÁas em est·gios iniciais a partir de exames laboratoriais e imagens. TÈcnicas como redes neurais convolucionais permitem identificar anomalias em radiografias e tomografias com impressionante precis„o, oferecendo suporte valioso para mÈdicos e reduzindo o risco de diagnÛsticos tardios.
-
-        No setor de marketing, algoritmos de recomendaÁ„o transformaram a experiÍncia do consumidor em plataformas digitais. Analisando comportamentos, preferÍncias e histÛrico de navegaÁ„o, os sistemas conseguem sugerir produtos e conte˙dos altamente personalizados, aumentando engajamento e convers„o. Esse tipo de abordagem tambÈm È utilizado em serviÁos de streaming para recomendar filmes, sÈries e m˙sicas alinhadas ao gosto do usu·rio.
-
-        Casos pr·ticos tambÈm aparecem na otimizaÁ„o logÌstica, onde modelos de previs„o de demanda e roteamento inteligente reduzem custos e aumentam eficiÍncia. Em ind˙strias, tÈcnicas de manutenÁ„o preditiva analisam dados de sensores para identificar falhas antes que ocorram, aumentando a seguranÁa e prolongando a vida ˙til de m·quinas.
-
-        Estudar esses exemplos reais permite compreender n„o apenas a teoria por tr·s dos algoritmos, mas tambÈm os desafios enfrentados ó como qualidade dos dados, viÈs, escalabilidade e performance ó e como eles s„o solucionados em projetos de grande impacto.',
-        t2
-    );
-
-    pkg_inserts.inserir_conteudo_trilha(
-        '81a2b3c4-5d6e-7f80-1a2b-3c4d5e6f7a77',
-        'Produtividade Digital',
-        'VÌdeo',
-        'https://www.youtube.com/watch?v=dSsmvXLLgAI',
-        t3
-    );
-    pkg_inserts.inserir_conteudo_trilha(
-        '92b3c4d5-6e7f-8091-2b3c-4d5e6f7a8b88',
-        'OrganizaÁ„o de Fluxo',
-        'Artigo',
-        'Organizar fluxos de trabalho digitais È uma etapa fundamental para qualquer equipe que busca aumentar a eficiÍncia, minimizar retrabalhos e criar processos mais previsÌveis. A construÁ„o de um bom fluxo comeÁa pela compreens„o clara das etapas essenciais de uma tarefa e da forma como elas se conectam entre si. Quando essa estrutura n„o È bem definida, surgem gargalos, atrasos e inconsistÍncias que afetam diretamente a qualidade das entregas e a produtividade do time. Por isso, entender o fluxo como uma cadeia integrada ajuda a identificar pontos crÌticos e oportunidades de melhoria.
-
-        Um dos pilares de um bom fluxo È a padronizaÁ„o. Isso significa criar um conjunto de regras, templates e orientaÁıes que orientem as atividades de forma uniforme, evitando variaÁıes desnecess·rias. AlÈm disso, a visibilidade do processo È indispens·vel. Utilizar ferramentas digitais que permitam acompanhar o andamento das tarefas em tempo real facilita a comunicaÁ„o entre os membros da equipe e reduz o tempo gasto para esclarecer d˙vidas ou localizar informaÁıes. Quando todos sabem exatamente em que etapa cada item est·, o risco de erros diminui consideravelmente.
-
-        Outro ponto importante È o mapeamento de responsabilidades. Cada etapa do fluxo deve ter um respons·vel claro, garantindo que n„o haja sobreposiÁ„o de funÁıes ou tarefas esquecidas. Ao mesmo tempo, a automaÁ„o desempenha um papel essencial: atividades repetitivas e manuais podem ser automatizadas para liberar tempo para tarefas mais estratÈgicas. Por fim, bons fluxos s„o vivos e devem ser revisados regularmente. Analisar mÈtricas, coletar feedback e testar novas abordagens faz parte do processo de evoluÁ„o contÌnua, permitindo que o fluxo se adapte ‡s necessidades do time, do projeto e do negÛcio como um todo.',
-        t3
-    );
-    pkg_inserts.inserir_conteudo_trilha(
-        'a3c4d5e6-7f80-9102-3c4d-5e6f7a8b9c99',
-        'SeguranÁa B·sica',
-        'VÌdeo',
-        'https://www.youtube.com/watch?v=Gfh2bxe3hGU',
-        t3
-    );
-
-    pkg_inserts.inserir_conteudo_trilha(
-        'b4d5e6f7-8091-1023-4d5e-6f7a8b9c0d10',
-        'Planejamento de Carreira',
-        'Artigo',
-        'Planejar a carreira È um processo contÌnuo que envolve autoconhecimento, an·lise de oportunidades e definiÁ„o de metas realistas para o futuro profissional. Muitas pessoas acreditam que a carreira se desenvolve de forma natural, mas na pr·tica os profissionais que alcanÁam resultados consistentes s„o aqueles que estruturam seus objetivos com clareza e revisam suas metas ao longo do tempo. O planejamento comeÁa pela compreens„o profunda das prÛprias habilidades, interesses e valores. Esse exercÌcio permite identificar caminhos que fazem sentido e evitam decisıes impulsivas baseadas apenas nas condiÁıes do momento.
-
-        AlÈm disso, È fundamental analisar o mercado de trabalho, entendendo tendÍncias, novas profissıes, habilidades emergentes e as transformaÁıes tecnolÛgicas que influenciam diferentes setores. Com essas informaÁıes em m„os, torna-se mais f·cil criar um plano coerente, estruturado em etapas claras. Uma boa estratÈgia envolve estabelecer metas de curto, mÈdio e longo prazo, sempre mensur·veis e alinhadas ‡s aspiraÁıes pessoais. Esse processo inclui desde a participaÁ„o em cursos e certificaÁıes atÈ o desenvolvimento de habilidades comportamentais essenciais, como comunicaÁ„o, lideranÁa e adaptabilidade.
-
-        Outro ponto crucial no planejamento de carreira È a construÁ„o de um portfÛlio sÛlido e a criaÁ„o de uma rede de contatos relevante. Networking n„o serve apenas para buscar oportunidades; ele ajuda a manter-se atualizado e permite aprender com profissionais experientes. Revisar o plano regularmente e ajustar rotas tambÈm faz parte da jornada, pois a carreira n„o È um caminho linear. MudanÁas de mercado, novas tecnologias e interesses pessoais evoluem com o tempo, exigindo flexibilidade e capacidade de adaptaÁ„o. Dessa forma, o planejamento de carreira se torna uma ferramenta poderosa para alcanÁar crescimento sustent·vel e realizaÁ„o profissional.',
-        t4
-    );
-    pkg_inserts.inserir_conteudo_trilha(
-        'c5e6f708-9102-2134-5e6f-7a8b9c0d1e21',
-        'PortfÛlio TÈcnico',
-        'VÌdeo',
-        'https://www.youtube.com/watch?v=EtrE7icLfxs',
-        t4
-    );
-
-    pkg_inserts.inserir_conteudo_trilha(
-        'd6f70819-0123-3245-6f70-8a9b0c1d2e32',
-        'Modelos de NegÛcio',
-        'Artigo',
-        'Compreender modelos de negÛcio È essencial para qualquer pessoa que deseja criar, gerenciar ou expandir uma empresa. Um modelo de negÛcio descreve de forma clara como uma organizaÁ„o cria, entrega e captura valor dentro de um mercado. Ele funciona como a estrutura lÛgica que sustenta a operaÁ„o e orienta as principais decisıes estratÈgicas. Existem v·rios tipos de modelos, como assinatura, marketplace, freemium, e-commerce tradicional, franquias e muitos outros, cada um com caracterÌsticas que atendem a necessidades especÌficas de consumidores e segmentos.
-
-        Ao estudar modelos de negÛcio, o empreendedor comeÁa a perceber como diferentes empresas utilizam estratÈgias distintas para gerar receita e se diferenciar no mercado. Por exemplo, negÛcios baseados em assinatura priorizam retenÁ„o e previsibilidade financeira, enquanto marketplaces se concentram em conectar compradores e vendedores sem necessariamente produzir bens prÛprios. Essas escolhas afetam diretamente ·reas como marketing, logÌstica, experiÍncia do cliente e estrutura de custos.
-
-        Outro ponto importante È avaliar a proposta de valor, ou seja, o motivo pelo qual um cliente escolheria aquela soluÁ„o em vez das alternativas existentes. A proposta de valor deve resolver um problema real, oferecer benefÌcios concretos e se comunicar de forma clara ao p˙blico-alvo. Ao mapear o modelo de negÛcio, ferramentas como o Business Model Canvas tornam o processo mais visual e compreensÌvel, ajudando a identificar oportunidades e riscos. Testar hipÛteses e validar ideias no mercado tambÈm È parte essencial, pois evita investimentos altos em modelos que n„o tÍm aderÍncia. Entender modelos de negÛcio È, portanto, uma habilidade estratÈgica para inovar, competir e crescer de maneira sustent·vel.',
-        t5
-    );
-    pkg_inserts.inserir_conteudo_trilha(
-        'e7f8192a-1234-4356-7071-9b0c1d2e3f43',
-        'ValidaÁ„o de Ideia',
-        'VÌdeo',
-        'https://www.youtube.com/watch?v=vHvpcs7aTDo',
-        t5
-    );
-
-    pkg_inserts.inserir_conteudo_trilha(
-        'f8091a2b-2345-5467-8172-0c1d2e3f4a54',
-        'Rotina Produtiva',
-        'Artigo',
-        'Manter uma rotina produtiva È um dos pilares do desenvolvimento pessoal e profissional, permitindo que as pessoas utilizem seu tempo de maneira eficiente e alcancem resultados consistentes ao longo do tempo. Uma rotina bem planejada n„o apenas organiza o dia, mas tambÈm cria um ambiente mental favor·vel para foco, disciplina e clareza de prioridades. Para isso, o primeiro passo È identificar os objetivos principais e estabelecer quais atividades s„o realmente essenciais para alcanÁ·-los. Quando h· essa clareza, torna-se mais f·cil evitar distraÁıes e direcionar energia para aÁıes que realmente importam.
-
-        Outro aspecto importante de uma rotina produtiva È a criaÁ„o de h·bitos. Habituar-se a comeÁar o dia com tarefas de maior impacto, por exemplo, aumenta significativamente a sensaÁ„o de progresso. Estruturas como o mÈtodo Pomodoro, blocos de tempo e listas priorizadas ajudam a organizar o fluxo de forma equilibrada, reduzindo a procrastinaÁ„o e aumentando a concentraÁ„o. AlÈm disso, incorporar pausas estratÈgicas ao longo do dia È fundamental para manter o desempenho, j· que perÌodos longos de trabalho contÌnuo tendem a gerar fadiga e prejudicar a qualidade das entregas.
-
-        A disciplina tambÈm desempenha um papel crucial. Ter uma rotina n„o significa rigidez extrema, mas sim consistÍncia. Ajustar hor·rios, eliminar distraÁıes e criar ambientes adequados ao trabalho s„o aÁıes que reforÁam o compromisso com a produtividade. Por fim, uma rotina produtiva deve ser revisada constantemente, levando em conta mudanÁas no trabalho, na sa˙de e nas demandas pessoais. Adaptar-se È t„o importante quanto manter-se organizado. Ao equilibrar foco, flexibilidade e h·bitos saud·veis, qualquer pessoa consegue construir uma rotina que potencializa seu desempenho e contribui para uma vida mais equilibrada e satisfatÛria.',
-        t6
-    );
-    pkg_inserts.inserir_conteudo_trilha(
-        '0a1b2c3d-3456-6578-9273-1d2e3f4a5b65',
-        'TÈcnicas de Foco',
-        'VÌdeo',
-        'https://www.youtube.com/watch?v=U9iE090X-64',
-        t6
-    );
-
-    pkg_inserts.inserir_conteudo_trilha(
-        '1b2c3d4e-4567-7689-a384-2e3f4a5b6c76',
-        'ComunicaÁ„o Efetiva',
-        'Artigo',
-        'A comunicaÁ„o efetiva È uma das habilidades mais essenciais na vida profissional e pessoal, pois influencia diretamente a qualidade das relaÁıes, a resoluÁ„o de conflitos e a capacidade de transmitir ideias de maneira clara e persuasiva. Para se comunicar bem, È fundamental entender que comunicaÁ„o n„o È apenas falar, mas tambÈm ouvir, interpretar e adaptar a mensagem conforme o contexto. A escuta ativa, por exemplo, È um componente central desse processo, pois permite compreender verdadeiramente o que o outro est· dizendo, evitando interpretaÁıes distorcidas e respostas impulsivas.
-
-        AlÈm disso, a comunicaÁ„o verbal exige atenÁ„o ao tom de voz, ‡ escolha das palavras e ‡ estrutura das frases. Pequenos ajustes podem fazer com que uma mensagem simples se torne mais clara, objetiva e acolhedora. No ambiente profissional, isso pode significar a diferenÁa entre um projeto bem alinhado e uma sÈrie de retrabalhos gerados por falhas na comunicaÁ„o. J· a comunicaÁ„o escrita requer ainda mais cuidado, especialmente em tempos de mensagens r·pidas, e-mails e conversas digitais. Revisar textos, organizar ideias e evitar ambiguidades s„o pr·ticas fundamentais para transmitir credibilidade e profissionalismo.
-
-        Outro ponto importante È entender que a comunicaÁ„o efetiva envolve tambÈm aspectos n„o verbais, como postura corporal, expressıes faciais e contato visual. Muitas vezes, a linguagem corporal comunica mais do que as palavras, reforÁando ó ou contradizendo ó a mensagem verbal. Desenvolver sensibilidade para esses elementos ajuda a construir relacionamentos mais sÛlidos e emp·ticos. Por fim, aprimorar a comunicaÁ„o È um processo contÌnuo que envolve pr·tica, autoconhecimento e disposiÁ„o para ajustar comportamentos. Quando cultivada de forma consciente, essa habilidade se torna um diferencial competitivo e um poderoso instrumento para criar conexıes significativas.',
-        t7
-    );
-    pkg_inserts.inserir_conteudo_trilha(
-        '2c3d4e5f-5678-879a-b495-3f4a5b6c7d87',
-        'Trabalho em Equipe',
-        'VÌdeo',
-        'https://www.youtube.com/watch?v=r6HcE6Bc6KE',
-        t7
-    );
-    pkg_inserts.inserir_conteudo_trilha(
-        '3d4e5f60-6789-98ab-c5a6-4a5b6c7d8e98',
-        'Feedback Construtivo',
-        'Artigo',
-        'O feedback construtivo È uma ferramenta poderosa para estimular o crescimento profissional e fortalecer relaÁıes de trabalho. Diferente de crÌticas vagas ou apontamentos puramente negativos, o feedback construtivo busca orientar, apoiar e promover melhorias reais no comportamento ou na performance de uma pessoa. Para oferecÍ-lo de maneira eficaz, È fundamental que ele seja claro, objetivo e especÌfico, evitando generalizaÁıes que podem gerar confus„o ou sentimentos de inseguranÁa. A ideia central È mostrar o que pode ser aprimorado, mas tambÈm reconhecer pontos fortes e reforÁar comportamentos positivos.
-
-        Uma estratÈgia bastante utilizada È o modelo de feedback baseado em fatos observ·veis. Nesse mÈtodo, a pessoa que dar· o feedback descreve situaÁıes concretas, explica o impacto da aÁ„o e sugere alternativas de melhoria. Isso evita julgamentos pessoais e torna a conversa mais produtiva. AlÈm disso, o tom deve ser sempre respeitoso, pois o objetivo n„o È constranger, mas sim contribuir para o desenvolvimento do outro. Em ambientes profissionais, quando o feedback È incorporado como pr·tica regular, ele se torna um dos principais mecanismos de evoluÁ„o individual e coletiva.
-
-        Da mesma forma, saber receber feedback È t„o importante quanto saber dar. Receber crÌticas pode gerar desconforto, mas quando encaradas com maturidade, elas se transformam em oportunidades de aprendizado. Manter postura aberta, fazer perguntas e refletir sobre os pontos levantados s„o atitudes que demonstram profissionalismo e disposiÁ„o para crescer. Por fim, o feedback construtivo deve ser contÌnuo, e n„o algo restrito a momentos formais de avaliaÁ„o. Quanto mais integrado ao cotidiano, mais natural e eficiente ele se torna, contribuindo para equipes mais colaborativas, transparentes e de alta performance.',
-        t7
-    );
-
-    pkg_inserts.inserir_conteudo_trilha(
-        '4e5f6071-789a-9abc-d6b7-5b6c7d8e9f09',
-        'IntroduÁ„o a Analytics',
-        'Artigo',
-        'Analytics È o processo de coletar, organizar, interpretar e transformar dados em informaÁıes ˙teis, capazes de orientar decisıes estratÈgicas. Em um mundo cada vez mais orientado por dados, compreender esse universo se tornou uma habilidade fundamental para profissionais de praticamente todas as ·reas. A an·lise de dados permite entender comportamentos, identificar padrıes, prever tendÍncias e otimizar processos de maneira muito mais precisa do que decisıes baseadas apenas em intuiÁ„o. Por isso, empresas que dominam essa pr·tica conseguem agir de forma mais competitiva, ·gil e eficiente.
-
-        O processo de analytics envolve v·rias etapas. A primeira È a coleta de dados, que pode vir de diversas fontes, como sistemas internos, plataformas digitais, sensores IoT, redes sociais e pesquisas. Em seguida, esses dados precisam ser organizados e limpos, removendo duplicidades e inconsistÍncias que possam distorcer an·lises. Depois disso, comeÁa a interpretaÁ„o, que utiliza tÈcnicas estatÌsticas, ferramentas de visualizaÁ„o e modelos matem·ticos para extrair insights relevantes. … nesse momento que surgem descobertas capazes de orientar decisıes de alto impacto, como estratÈgias de marketing, melhorias operacionais ou inovaÁıes em produtos.
-
-        Outro aspecto importante È a visualizaÁ„o de dados. Gr·ficos, dashboards e relatÛrios tornam informaÁıes complexas mais acessÌveis, facilitando a comunicaÁ„o com gestores e equipes. Ferramentas modernas como Power BI, Tableau e Looker tornam esse processo mais intuitivo e interativo. Por fim, analytics È uma ·rea em constante evoluÁ„o, impulsionada por tecnologias como machine learning e inteligÍncia artificial, que ampliam a capacidade de an·lise e prediÁ„o. Para quem est· comeÁando, compreender os princÌpios b·sicos e desenvolver raciocÌnio analÌtico j· È um excelente caminho para atuar em ·reas estratÈgicas e de grande demanda no mercado.',
-        t8
-    );
-    pkg_inserts.inserir_conteudo_trilha(
-        '5f607182-89ab-abcd-e7c8-6c7d8e9f0011',
-        'VisualizaÁ„o de Dados',
-        'VÌdeo',
-        'https://www.youtube.com/watch?v=loYuxWSsLNc',
-        t8
-    );
-
-    pkg_inserts.inserir_conteudo_trilha(
-        '60718293-9abc-bcde-f8d9-7d8e9f001122',
-        'Design Thinking',
-        'Artigo',
-        'O Design Thinking È uma abordagem centrada no ser humano que busca compreender profundamente as necessidades, dores e motivaÁıes das pessoas antes de qualquer tentativa de soluÁ„o. Mais do que uma metodologia, trata-se de uma forma de pensar, que valoriza empatia, colaboraÁ„o multidisciplinar e experimentaÁ„o constante. Embora muitas vezes seja apresentado como um processo dividido em cinco etapas ó Empatia, DefiniÁ„o, IdeaÁ„o, Prototipagem e Testes ó o mais importante È sua flexibilidade e a capacidade de adaptar essas fases ao contexto real do problema.
-
-        Na etapa de Empatia, o objetivo È observar e ouvir usu·rios reais, entendendo como eles se comportam e quais desafios enfrentam no dia a dia. Esse contato direto revela necessidades ocultas e percepÁıes que dificilmente surgiriam atravÈs de an·lises superficiais. Em seguida, a fase de DefiniÁ„o organiza as descobertas, transformando-as em um problema claro e bem formulado, permitindo que a equipe ataque a causa e n„o apenas os sintomas.
-
-        A fase de IdeaÁ„o incentiva a criaÁ„o de diversas possibilidades, estimulando a criatividade e eliminando julgamentos prematuros. A diversidade de ideias aumenta a probabilidade de surgirem soluÁıes ousadas e relevantes. Logo depois, a Prototipagem transforma ideias em modelos simples e funcionais, que podem ser rapidamente testados. Essa pr·tica reduz custos e acelera o aprendizado. Por fim, os Testes colocam o protÛtipo diante dos usu·rios, permitindo ajustes, validaÁıes e novas descobertas.
-
-        OrganizaÁıes que adotam Design Thinking conseguem inovar mais rapidamente, reduzir retrabalho e desenvolver soluÁıes mais conectadas com a realidade das pessoas. … uma filosofia essencial para qualquer profissional que deseja criar produtos, processos e experiÍncias realmente significativas.',
-        t9
-    );
-    pkg_inserts.inserir_conteudo_trilha(
-        '718293a4-abcd-cdef-09e1-8e9f00112233',
-        'Criatividade Aplicada',
-        'VÌdeo',
-        'https://www.youtube.com/watch?v=neijx0gAKoQ',
-        t9
-    );
-
-    pkg_inserts.inserir_conteudo_trilha(
-        '8293a4b5-bcde-def0-1f22-9f0011223344',
-        'LideranÁa Situacional',
-        'Artigo',
-        'A LideranÁa Situacional È um dos modelos mais utilizados no mundo corporativo por reconhecer que n„o existe um ˙nico estilo de lideranÁa ideal. O lÌder eficaz È aquele que consegue ajustar sua abordagem com base no nÌvel de maturidade, experiÍncia e engajamento de cada colaborador ou equipe. Dessa forma, a lideranÁa deixa de ser fixa e passa a ser adaptativa, permitindo intervenÁıes mais precisas e produtivas.
-
-        O modelo apresenta quatro estilos principais: DireÁ„o, OrientaÁ„o, Apoio e DelegaÁ„o. O estilo de DireÁ„o È recomendado quando o colaborador ainda n„o possui conhecimento suficiente para atuar de forma independente. Nesse est·gio, o lÌder fornece instruÁıes claras, define prioridades e acompanha de perto a execuÁ„o. J· o estilo de OrientaÁ„o mantÈm o direcionamento, mas agrega explicaÁıes detalhadas e maior estÌmulo, permitindo que o profissional compreenda n„o apenas o ìcomoî, mas tambÈm o ìporquÍî das tarefas.
-
-        ¿ medida que o colaborador ganha confianÁa e domÌnio tÈcnico, o estilo de Apoio se torna apropriado. Nesse momento, o lÌder reduz o controle e passa a incentivar participaÁ„o ativa, escuta e tomada conjunta de decisıes. Por fim, quando o colaborador atinge plena autonomia, o estilo de DelegaÁ„o È o mais indicado. Aqui, o lÌder atua de forma mais distante, realizando apenas alinhamentos periÛdicos, enquanto o profissional assume responsabilidade total pelo processo.
-
-        Aplicar a LideranÁa Situacional melhora o clima organizacional, reduz conflitos, acelera o desenvolvimento das pessoas e aumenta a produtividade. Mais do que um modelo, ela representa maturidade emocional e inteligÍncia adaptativa, habilidades essenciais para gestores que desejam conduzir times de maneira eficaz em ambientes din‚micos e desafiadores.',
-        t10
-    );
-    pkg_inserts.inserir_conteudo_trilha(
-        '93a4b5c6-cdef-ef01-2f33-001122334455',
-        'Gest„o de Equipes Remotas',
-        'VÌdeo',
-        'https://www.youtube.com/watch?v=piqXHbK8dw4',
-        t10
-    );
-    pkg_inserts.inserir_conteudo_trilha(
-        'a4b5c6d7-ef01-0123-3f44-112233445566',
-        'Tomada de Decis„o',
-        'Artigo',
-        'A Tomada de Decis„o È uma das competÍncias mais determinantes para o sucesso de equipes, projetos e organizaÁıes. Decidir bem vai muito alÈm de escolher entre alternativas; envolve reconhecer padrıes, analisar consequÍncias, compreender riscos e transformar informaÁıes complexas em aÁıes concretas. Profissionais que dominam esse processo conseguem agir com clareza mesmo em ambientes de alta press„o e incerteza.
-
-        Entre os modelos mais tradicionais est· o processo racional, que consiste em identificar o problema, levantar opÁıes, avaliar impactos e selecionar a escolha mais vantajosa. Apesar de eficiente, esse modelo pode ser lento em situaÁıes urgentes. Por isso, mÈtodos complementares ó como heurÌsticas, matrizes de decis„o, an·lise SWOT, ·rvores decisÛrias e mapas mentais ó ajudam a tornar o processo mais ·gil sem perder qualidade. Cada tÈcnica oferece uma perspectiva diferente e ajuda a equilibrar intuiÁ„o, lÛgica e experiÍncia.
-
-        AlÈm disso, a tomada de decis„o eficaz depende fortemente da colaboraÁ„o. Quando equipes com diferentes visıes participam do processo, as chances de erros diminuem e as soluÁıes se tornam mais completas. Entretanto, decidir n„o È apenas sobre escolher; È tambÈm sobre assumir responsabilidade, acompanhar resultados e revisar decisıes quando necess·rio. A capacidade de aprender com erros, ajustar estratÈgias e manter transparÍncia fortalece a confianÁa e aumenta a maturidade organizacional.
-
-        Em um mundo onde as mudanÁas s„o r·pidas e constantes, saber decidir de forma estruturada e consciente se tornou um diferencial competitivo. Dominar tÈcnicas de tomada de decis„o ajuda profissionais e lÌderes a lidarem melhor com desafios inesperados, a priorizarem o que realmente importa e a conduzirem equipes em direÁ„o a resultados mais sÛlidos e sustent·veis.',
-        t10
-    );
-end;
-/
-
-
-
-begin
-    pkg_inserts.inserir_endereco_usuario('b0a5f2e7-879c-4a13-82ab-71f1b716de11','01001-000','Rua A','SP');
-    pkg_inserts.inserir_endereco_usuario('5e5fc7b4-863d-4e8a-b0bb-c93a4360f972','20010-000','Rua B','RJ');
-    pkg_inserts.inserir_endereco_usuario('d1e1faf0-1f4b-4e5e-b20e-61c1ea2cfa16','30130-000','Rua C','MG');
-    pkg_inserts.inserir_endereco_usuario('a8c98cb7-2477-4a77-9b18-d4c2c843d814','70040-010','Rua D','DF');
-    pkg_inserts.inserir_endereco_usuario('1fd6c2a0-5ed9-4c8b-9e8c-85bc03f3e4d5','80010-000','Rua E','PR');
-    pkg_inserts.inserir_endereco_usuario('e2a0b2f5-32d6-412d-af4c-917b1f5fb35d','60015-000','Rua F','CE');
-    pkg_inserts.inserir_endereco_usuario('07db33ad-fd10-4ef0-bc0b-30a69e6ac72d','40020-000','Rua G','BA');
-    pkg_inserts.inserir_endereco_usuario('6bcff902-6e51-4a97-a7f3-3630b8979a2d','88010-000','Rua H','SC');
-    pkg_inserts.inserir_endereco_usuario('3f29cdf1-4658-4fa4-81ef-d51ff6cba93b','69005-000','Rua I','AM');
-    pkg_inserts.inserir_endereco_usuario('c82ae200-0df6-4f6c-887a-a69e502435f8','66010-000','Rua J','PA');
-end;
-/
-
-declare
-    v_profissoes sys.odcivarchar2list := sys.odcivarchar2list(
-        'Cientista de Dados',
-        'Engenheiro de Software',
-        'Analista de SeguranÁa CibernÈtica',
-        'Designer UX/UI',
-        'Analista de Dados',
-        'Gestor de Projetos ¡geis',
-        'Especialista em InteligÍncia Artificial',
-        'Arquiteto de SoluÁıes',
-        'Programador Mobile',
-        'Product Manager'
-    );
-
-    v_index integer := 1;
-begin
-    for r in (select id_usuario from tb_usuario order by id_usuario)
-    loop
-        pkg_inserts.inserir_formulario_profissao(
-            r.id_usuario,
-            'Resposta 1','Resposta 2','Resposta 3','Resposta 4','Resposta 5',
-            'Resposta 6','Resposta 7','Resposta 8','Resposta 9','Resposta 10',
-            v_profissoes(v_index)
-        );
-
-        v_index := v_index + 1;
-        if v_index > v_profissoes.count then
-            v_index := 1;
-        end if;
-    end loop;
-end;
-/
-
-declare
-    u1 varchar2(36) := 'b0a5f2e7-879c-4a13-82ab-71f1b716de11';
-    u2 varchar2(36) := '5e5fc7b4-863d-4e8a-b0bb-c93a4360f972';
-    u3 varchar2(36) := 'd1e1faf0-1f4b-4e5e-b20e-61c1ea2cfa16';
-    u4 varchar2(36) := 'a8c98cb7-2477-4a77-9b18-d4c2c843d814';
-    u5 varchar2(36) := '1fd6c2a0-5ed9-4c8b-9e8c-85bc03f3e4d5';
-    u6 varchar2(36) := 'e2a0b2f5-32d6-412d-af4c-917b1f5fb35d';
-    u7 varchar2(36) := '07db33ad-fd10-4ef0-bc0b-30a69e6ac72d';
-    u8 varchar2(36) := '6bcff902-6e51-4a97-a7f3-3630b8979a2d';
-    u9 varchar2(36) := '3f29cdf1-4658-4fa4-81ef-d51ff6cba93b';
-    u10 varchar2(36) := 'c82ae200-0df6-4f6c-887a-a69e502435f8';
-begin
-    pkg_inserts.inserir_conteudo_trilha_usuario(sys_guid(),'s',u2,'9a7f2d1b-3c2a-4b9f-8a47-1e0c5d2a9f11'); 
-    pkg_inserts.inserir_conteudo_trilha_usuario(sys_guid(),'s',u2,'2b8c6e3d-7f1a-4d2b-ab12-3f8a6d4c2b22');
-    pkg_inserts.inserir_conteudo_trilha_usuario(sys_guid(),'s',u2,'4c3d9f5e-1a2b-43c4-bd55-6a9e7f8b3c33');
-    
-    pkg_inserts.inserir_conteudo_trilha_usuario(sys_guid(),'s',u4,'5d4e8a6f-2b3c-4f1a-9c22-7b8d6e5f4a44');
-    pkg_inserts.inserir_conteudo_trilha_usuario(sys_guid(),'s',u4,'6e5f7b8c-3c4d-5a2b-8d33-8c9e7f6a5b55');
-    pkg_inserts.inserir_conteudo_trilha_usuario(sys_guid(),'s',u4,'7f6a8c9d-4d5e-6b3c-9e44-9d0f8a7b6c66');
-
-    pkg_inserts.inserir_conteudo_trilha_usuario(sys_guid(),'s',u3,'5d4e8a6f-2b3c-4f1a-9c22-7b8d6e5f4a44'); 
-
-    pkg_inserts.inserir_conteudo_trilha_usuario(sys_guid(),'s',u6,'81a2b3c4-5d6e-7f80-1a2b-3c4d5e6f7a77');
-    pkg_inserts.inserir_conteudo_trilha_usuario(sys_guid(),'s',u6,'92b3c4d5-6e7f-8091-2b3c-4d5e6f7a8b88');
-    pkg_inserts.inserir_conteudo_trilha_usuario(sys_guid(),'s',u6,'a3c4d5e6-7f80-9102-3c4d-5e6f7a8b9c99');
-
-    pkg_inserts.inserir_conteudo_trilha_usuario(sys_guid(),'s',u5,'81a2b3c4-5d6e-7f80-1a2b-3c4d5e6f7a77');
-
-    pkg_inserts.inserir_conteudo_trilha_usuario(sys_guid(),'s',u8,'b4d5e6f7-8091-1023-4d5e-6f7a8b9c0d10');
-    pkg_inserts.inserir_conteudo_trilha_usuario(sys_guid(),'s',u8,'c5e6f708-9102-2134-5e6f-7a8b9c0d1e21');
-
-    pkg_inserts.inserir_conteudo_trilha_usuario(sys_guid(),'s',u10,'d6f70819-0123-3245-6f70-8a9b0c1d2e32');
-    pkg_inserts.inserir_conteudo_trilha_usuario(sys_guid(),'s',u10,'e7f8192a-1234-4356-7071-9b0c1d2e3f43');
-
-    pkg_inserts.inserir_conteudo_trilha_usuario(sys_guid(),'s',u9,'d6f70819-0123-3245-6f70-8a9b0c1d2e32'); 
-
-    pkg_inserts.inserir_conteudo_trilha_usuario(sys_guid(),'s',u6,'f8091a2b-2345-5467-8172-0c1d2e3f4a54'); 
-
-    pkg_inserts.inserir_conteudo_trilha_usuario(sys_guid(),'s',u2,'1b2c3d4e-4567-7689-a384-2e3f4a5b6c76');
-
-    pkg_inserts.inserir_conteudo_trilha_usuario(sys_guid(),'s',u8,'4e5f6071-789a-9abc-d6b7-5b6c7d8e9f09');
-
-    pkg_inserts.inserir_conteudo_trilha_usuario(sys_guid(),'s',u10,'60718293-9abc-bcde-f8d9-7d8e9f001122');
-    pkg_inserts.inserir_conteudo_trilha_usuario(sys_guid(),'s',u10,'718293a4-abcd-cdef-09e1-8e9f00112233');
-
-    pkg_inserts.inserir_conteudo_trilha_usuario(sys_guid(),'s',u9,'8293a4b5-bcde-def0-1f22-9f0011223344');
-    pkg_inserts.inserir_conteudo_trilha_usuario(sys_guid(),'s',u9,'93a4b5c6-cdef-ef01-2f33-001122334455');
-    pkg_inserts.inserir_conteudo_trilha_usuario(sys_guid(),'s',u9,'a4b5c6d7-ef01-0123-3f44-112233445566');
-end;
-/
-
-declare
-    cursor c_usuarios is
-        select id_usuario from tb_usuario order by id_usuario;
-
-    cursor c_trilhas is
-        select id_trilha from tb_trilha order by id_trilha;
-begin
-    for u in c_usuarios loop
-        for t in c_trilhas loop
-            pkg_inserts.inserir_trilha_usuario(sys_guid(), u.id_usuario, t.id_trilha, 'n');
-        end loop;
-    end loop;
-end;
-/
-
-declare
-    cursor c_usuarios is
-        select id_usuario
-        from tb_usuario
-        order by id_usuario;
-
-    cursor c_conteudos is
-        select id_conteudo_trilha
-        from tb_conteudo_trilha
-        order by id_conteudo_trilha;
-begin
-    for u in c_usuarios loop
-        for c in c_conteudos loop
-
-            declare
-                v_exists number;
-            begin
-                select count(*)
-                into v_exists
-                from tb_conteudo_trilha_usuario
-                where id_usuario = u.id_usuario
-                  and id_conteudo_trilha = c.id_conteudo_trilha;
-
-                if v_exists = 0 then
-                    pkg_inserts.inserir_conteudo_trilha_usuario(
-                        sys_guid(),
-                        'n',
-                        u.id_usuario,
-                        c.id_conteudo_trilha
-                    );
-                end if;
-            end;
-
-        end loop;
-    end loop;
-end;
-/
-
-create or replace package package_usuario as
-
-    procedure prc_popular_trilhas_e_conteudos_usuario (
-        p_id_usuario in varchar2
-    );
-
-end package_usuario;
-/
-
-create or replace package body package_usuario as
-    procedure prc_popular_trilhas_e_conteudos_usuario (
-        p_id_usuario in varchar2
-    ) is
-        cursor c_trilhas is
-            select id_trilha
-              from tb_trilha
-          order by id_trilha;
-
-        cursor c_conteudos is
-            select id_conteudo_trilha
-              from tb_conteudo_trilha
-          order by id_conteudo_trilha;
-
-        v_exists number;
-    begin
-        for t in c_trilhas loop
-            select count(*)
-              into v_exists
-              from tb_trilha_usuario
-             where id_usuario = p_id_usuario
-               and id_trilha  = t.id_trilha;
-
-            if v_exists = 0 then
-                pkg_inserts.inserir_trilha_usuario(
-                    sys_guid(),
-                    p_id_usuario,
-                    t.id_trilha,
-                    'N'
-                );
-            end if;
-        end loop;
-
-        for c in c_conteudos loop
-            select count(*)
-              into v_exists
-              from tb_conteudo_trilha_usuario
-             where id_usuario = p_id_usuario
-               and id_conteudo_trilha = c.id_conteudo_trilha;
-
-            if v_exists = 0 then
-                pkg_inserts.inserir_conteudo_trilha_usuario(
-                    sys_guid(),
-                    'N',
-                    p_id_usuario,
-                    c.id_conteudo_trilha
-                );
-            end if;
-        end loop;
-
-    end prc_popular_trilhas_e_conteudos_usuario;
-end package_usuario;
-/
-
-
-
-create or replace package pkg_functions as
-    -- FUNCAO 1 
-    function fn_to_json_trilhas_usuario_resumido(p_id_usuario varchar2) return varchar2;
-    -- FUNCAO 2
-    function fn_validar_usuario_e_progresso(p_id_usuario varchar2) return varchar2;
-end pkg_functions;
-/
-
-
-create or replace package body pkg_functions as
-    -- FUNCAO 1 
-    function fn_to_json_trilhas_usuario_resumido(
-        p_id_usuario varchar2
-    ) return varchar2
-    is
-        v_json          varchar2(5000);
-        v_trilhas       varchar2(5000);
-        v_nome_usuario  varchar2(255);
-        v_email_usuario varchar2(255);
-    
-        e_usuario_inexistente exception;
-        pragma exception_init(e_usuario_inexistente, -20001);
-    
-        function escape_json(p_text varchar2) return varchar2 is
-        begin
-            if p_text is null then
-                return '""';
-            end if;
-            return '"' || replace(replace(p_text, '\', '\\'), '"', '\"') || '"';
-        end;
-    begin
-        begin
-            select nome_usuario, email_usuario
-            into v_nome_usuario, v_email_usuario
-            from tb_usuario
-            where id_usuario = p_id_usuario;
-        exception 
-            when no_data_found then
-                raise e_usuario_inexistente;
-        end;
-    
-        v_trilhas := '[';
-        for t in (
-            select tu.id_trilha_usuario,
-                   t.id_trilha,
-                   t.nome_trilha,
-                   t.quantidade_conteudo_trilha,
-                   tu.trilha_concluida_usuario
-            from tb_trilha_usuario tu
-            inner join tb_trilha t on t.id_trilha = tu.id_trilha
-            where tu.id_usuario = p_id_usuario
-            order by t.nome_trilha
-        ) loop
-            if v_trilhas <> '[' then
-                v_trilhas := v_trilhas || ',';
-            end if;
-    
-            v_trilhas := v_trilhas ||
-                '{' ||
-                    '"id_trilha":' || escape_json(t.id_trilha) || ',' ||
-                    '"nome":' || escape_json(t.nome_trilha) || ',' ||
-                    '"quantidade_conteudos":' || t.quantidade_conteudo_trilha || ',' ||
-                    '"trilha_concluida":' || escape_json(nvl(t.trilha_concluida_usuario,'N')) ||
-                '}';
-        end loop;
-        v_trilhas := v_trilhas || ']';
-    
-        v_json :=
-            '{' ||
-                '"id_usuario":' || escape_json(p_id_usuario) || ',' || 
-                '"nome":' || escape_json(v_nome_usuario) || ',' ||
-                '"email":' || escape_json(v_email_usuario) || ',' ||
-                '"trilhas":' || v_trilhas ||
-            '}';
-    
-        return v_json;
-    
-    exception
-        when e_usuario_inexistente then
-            return '{"error":"Usu·rio n„o encontrado"}';
-        when others then
-            return '{"error":"Erro: ' || replace(sqlerrm,'"','\"') || '"}';
-    end fn_to_json_trilhas_usuario_resumido;
-
-    -- FUNCAO 2
-    function fn_validar_usuario_e_progresso(
-        p_id_usuario varchar2
-    ) return varchar2
-    is
-        v_email    varchar2(255);
-        v_nome     varchar2(255);
-
-        v_total_trilhas          number := 0;
-        v_total_trilhas_conc     number := 0;
-        v_percentual_trilhas     number := 0;
-
-        v_total_conteudos        number := 0;
-        v_total_conteudos_conc   number := 0;
-
-        e_formato_email_invalido exception;
-        e_uuid_invalido          exception;
-        e_usuario_nao_existe     exception;
-
-        pragma exception_init(e_formato_email_invalido, -20010);
-        pragma exception_init(e_uuid_invalido, -20011);
-        pragma exception_init(e_usuario_nao_existe, -20012);
-
-    begin
-        if not regexp_like(
-            p_id_usuario,
-            '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$'
-        ) then
-            raise e_uuid_invalido;
-        end if;
-
-        begin
-            select nome_usuario, email_usuario
-            into v_nome, v_email
-            from tb_usuario
-            where id_usuario = p_id_usuario;
-
-        exception
-            when no_data_found then
-                raise e_usuario_nao_existe;
-        end;
-
-        if not regexp_like(
-            v_email,
-            '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'
-        ) then
-            raise e_formato_email_invalido;
-        end if;
-
-        select 
-            count(*),
-            sum(case when trilha_concluida_usuario = 'S' then 1 else 0 end)
-        into v_total_trilhas, v_total_trilhas_conc
-        from tb_trilha_usuario
-        where id_usuario = p_id_usuario;
-
-        if v_total_trilhas > 0 then
-            v_percentual_trilhas :=
-                round((v_total_trilhas_conc / v_total_trilhas) * 100, 2);
-        else
-            v_percentual_trilhas := 0;
-        end if;
-
-        select 
-            count(*),
-            sum(case when conteudo_trilha_concluida_usuario = 'S' then 1 else 0 end)
-        into v_total_conteudos, v_total_conteudos_conc
-        from tb_conteudo_trilha_usuario
-        where id_usuario = p_id_usuario;
-
-        return
-            '{' ||
-                '"id_usuario":"' || p_id_usuario || '",' ||
-                '"nome":"' || v_nome || '",' ||
-                '"email":"' || v_email || '",' ||
-                '"progresso_trilhas":{' ||
-                    '"total":' || v_total_trilhas || ',' ||
-                    '"concluidas":' || v_total_trilhas_conc || ',' ||
-                    '"percentual":' || v_percentual_trilhas ||
-                '},' ||
-                '"progresso_conteudos":{' ||
-                    '"total":' || nvl(v_total_conteudos,0) || ',' ||
-                    '"concluidos":' || nvl(v_total_conteudos_conc,0) ||
-                '}' ||
-            '}';
-
-    exception
-        when e_uuid_invalido then
-            return '{"error":"ID do usu·rio n„o est· em formato UUID v·lido."}';
-
-        when e_usuario_nao_existe then
-            return '{"error":"Usu·rio n„o encontrado no sistema."}';
-
-        when e_formato_email_invalido then
-            return '{"error":"E-mail do usu·rio n„o È corporativo ou possui formato inv·lido."}';
-
-        when others then
-            return '{"error":"Erro desconhecido: ' || sqlerrm || '"}';
-    end fn_validar_usuario_e_progresso;
-end pkg_functions;
-/
-
-create or replace package pkg_jobs as
-    procedure prc_gerar_json_trilhas_todos;
-end pkg_jobs;
-/
-
-create or replace package body pkg_jobs as
-
-    procedure prc_gerar_json_trilhas_todos
-    is
-        v_json        varchar2(32767);
-        v_primeiro    boolean := true;
-    begin
-        dbms_output.put_line('[');  
-
-        for u in (
-            select id_usuario
-            from tb_usuario
-            order by nome_usuario
-        ) loop
-            begin
-                v_json := pkg_functions.fn_to_json_trilhas_usuario_resumido(u.id_usuario);
-
-                if not v_primeiro then
-                    dbms_output.put_line(',');
-                else
-                    v_primeiro := false;
-                end if;
-
-                dbms_output.put_line(v_json);
-
-            exception
-                when others then
-                    dbms_output.put_line('-- ERRO ao gerar JSON para o usu·rio ' || u.id_usuario || ': ' || sqlerrm);
-            end;
-        end loop;
-
-        dbms_output.put_line(']');  
-
-        dbms_output.put_line('-- PROCESSO FINALIZADO');
-    end prc_gerar_json_trilhas_todos;
-
-end pkg_jobs;
-/
-
-
-/*
---RODAR INDIVIDUALMENTE PARA TESTAR
-begin
-    dbms_output.put_line(pkg_functions.fn_to_json_trilhas_usuario('b0a5f2e7-879c-4a13-82ab-71f1b716de11'));
-end;
-/
-
-begin
-    dbms_output.put_line(pkg_functions.fn_to_json_trilhas_usuario_resumido('b0a5f2e7-879c-4a13-82ab-71f1b716de11'));
-end;
-/
-
-begin
-    pkg_jobs.prc_gerar_json_trilhas_todos;
-end;
-/
+GO
+
+/* =========================
+   Triggers for audit logging
+   Using set-based inserts with inserted/deleted
+   ========================= */
+
+/* Helper: for each audited table we will insert one row into tb_auditoria for each affected row,
+   indicating operation 'insert'/'update'/'delete' and a 'registro' string similar to Oracle version.
 */
 
-commit;
+/* tb_usuario trigger */
+IF OBJECT_ID('trg_au_tb_usuario', 'TR') IS NOT NULL DROP TRIGGER trg_au_tb_usuario;
+GO
+CREATE TRIGGER trg_au_tb_usuario
+ON dbo.tb_usuario
+AFTER INSERT, UPDATE, DELETE
+AS
+BEGIN
+    SET NOCOUNT ON;
 
+    -- Inserts and updates: rows present in inserted
+    INSERT INTO dbo.tb_auditoria (nome_tabela, operacao, registro, data_operacao)
+    SELECT
+        'tb_usuario' AS nome_tabela,
+        CASE
+            WHEN i.id_usuario IS NOT NULL AND d.id_usuario IS NULL THEN 'insert'
+            WHEN i.id_usuario IS NOT NULL AND d.id_usuario IS NOT NULL THEN 'update'
+            WHEN i.id_usuario IS NULL AND d.id_usuario IS NOT NULL THEN 'delete'
+            ELSE 'unknown'
+        END AS operacao,
+        -- Build registro string showing old -> new values
+        'id_usuario=' + ISNULL(COALESCE(i.id_usuario,d.id_usuario),'') + '; '
+        + 'nome_usuario(old)=' + ISNULL(d.nome_usuario,'') + ' -> nome_usuario(new)=' + ISNULL(i.nome_usuario,'') + '; '
+        + 'email_usuario(old)=' + ISNULL(d.email_usuario,'') + ' -> email_usuario(new)=' + ISNULL(i.email_usuario,'') + '; '
+        + 'senha_usuario(old)=' + ISNULL(d.senha_usuario,'') + ' -> senha_usuario(new)=' + ISNULL(i.senha_usuario,'') + '; '
+        + 'data_nascimento_usuario(old)=' + ISNULL(CONVERT(varchar(19), d.data_nascimento_usuario, 120),'') + ' -> data_nascimento_usuario(new)=' + ISNULL(CONVERT(varchar(19), i.data_nascimento_usuario, 120),'')
+        AS registro,
+        SYSDATETIME() AS data_operacao
+    FROM inserted i
+    FULL OUTER JOIN deleted d ON i.id_usuario = d.id_usuario;
+END;
+GO
 
+/* tb_trilha trigger */
+IF OBJECT_ID('trg_au_tb_trilha', 'TR') IS NOT NULL DROP TRIGGER trg_au_tb_trilha;
+GO
+CREATE TRIGGER trg_au_tb_trilha
+ON dbo.tb_trilha
+AFTER INSERT, UPDATE, DELETE
+AS
+BEGIN
+    SET NOCOUNT ON;
+    INSERT INTO dbo.tb_auditoria (nome_tabela, operacao, registro, data_operacao)
+    SELECT
+        'tb_trilha',
+        CASE WHEN i.id_trilha IS NOT NULL AND d.id_trilha IS NULL THEN 'insert'
+             WHEN i.id_trilha IS NOT NULL AND d.id_trilha IS NOT NULL THEN 'update'
+             WHEN i.id_trilha IS NULL AND d.id_trilha IS NOT NULL THEN 'delete'
+             ELSE 'unknown' END,
+        'id_trilha=' + ISNULL(COALESCE(i.id_trilha,d.id_trilha),'') + '; '
+        + 'nome_trilha(old)=' + ISNULL(d.nome_trilha,'') + ' -> nome_trilha(new)=' + ISNULL(i.nome_trilha,'') + '; '
+        + 'quantidade_conteudo_trilha(old)=' + ISNULL(CONVERT(varchar(10), d.quantidade_conteudo_trilha),'') + ' -> quantidade_conteudo_trilha(new)=' + ISNULL(CONVERT(varchar(10), i.quantidade_conteudo_trilha),''),
+        SYSDATETIME()
+    FROM inserted i
+    FULL OUTER JOIN deleted d ON i.id_trilha = d.id_trilha;
+END;
+GO
+
+/* tb_conteudo_trilha trigger */
+IF OBJECT_ID('trg_au_tb_conteudo_trilha', 'TR') IS NOT NULL DROP TRIGGER trg_au_tb_conteudo_trilha;
+GO
+CREATE TRIGGER trg_au_tb_conteudo_trilha
+ON dbo.tb_conteudo_trilha
+AFTER INSERT, UPDATE, DELETE
+AS
+BEGIN
+    SET NOCOUNT ON;
+    INSERT INTO dbo.tb_auditoria (nome_tabela, operacao, registro, data_operacao)
+    SELECT
+        'tb_conteudo_trilha',
+        CASE WHEN i.id_conteudo_trilha IS NOT NULL AND d.id_conteudo_trilha IS NULL THEN 'insert'
+             WHEN i.id_conteudo_trilha IS NOT NULL AND d.id_conteudo_trilha IS NOT NULL THEN 'update'
+             WHEN i.id_conteudo_trilha IS NULL AND d.id_conteudo_trilha IS NOT NULL THEN 'delete'
+             ELSE 'unknown' END,
+        'id_conteudo_trilha=' + ISNULL(COALESCE(i.id_conteudo_trilha,d.id_conteudo_trilha),'') + '; '
+        + 'nome_conteudo_trilha(old)=' + ISNULL(d.nome_conteudo_trilha,'') + ' -> (new)=' + ISNULL(i.nome_conteudo_trilha,'') + '; '
+        + 'tipo_conteudo_trilha(old)=' + ISNULL(d.tipo_conteudo_trilha,'') + ' -> (new)=' + ISNULL(i.tipo_conteudo_trilha,'') + '; '
+        + 'texto_conteudo_trilha(old)=' + ISNULL(LEFT(d.texto_conteudo_trilha,1000),'') + ' -> (new)=' + ISNULL(LEFT(i.texto_conteudo_trilha,1000),'') + '; '
+        + 'id_trilha=' + ISNULL(COALESCE(i.id_trilha,d.id_trilha),''),
+        SYSDATETIME()
+    FROM inserted i
+    FULL OUTER JOIN deleted d ON i.id_conteudo_trilha = d.id_conteudo_trilha;
+END;
+GO
+
+/* tb_conteudo_trilha_usuario trigger */
+IF OBJECT_ID('trg_au_tb_conteudo_trilha_usuario', 'TR') IS NOT NULL DROP TRIGGER trg_au_tb_conteudo_trilha_usuario;
+GO
+CREATE TRIGGER trg_au_tb_conteudo_trilha_usuario
+ON dbo.tb_conteudo_trilha_usuario
+AFTER INSERT, UPDATE, DELETE
+AS
+BEGIN
+    SET NOCOUNT ON;
+    INSERT INTO dbo.tb_auditoria (nome_tabela, operacao, registro, data_operacao)
+    SELECT
+        'tb_conteudo_trilha_usuario',
+        CASE WHEN i.id_conteudo_trilha_usuario IS NOT NULL AND d.id_conteudo_trilha_usuario IS NULL THEN 'insert'
+             WHEN i.id_conteudo_trilha_usuario IS NOT NULL AND d.id_conteudo_trilha_usuario IS NOT NULL THEN 'update'
+             WHEN i.id_conteudo_trilha_usuario IS NULL AND d.id_conteudo_trilha_usuario IS NOT NULL THEN 'delete'
+             ELSE 'unknown' END,
+        'id_conteudo_trilha_usuario=' + ISNULL(COALESCE(i.id_conteudo_trilha_usuario,d.id_conteudo_trilha_usuario),'') + '; '
+        + 'conteudo_trilha_concluida_usuario(old)=' + ISNULL(d.conteudo_trilha_concluida_usuario,'') + ' -> (new)=' + ISNULL(i.conteudo_trilha_concluida_usuario,'') + '; '
+        + 'id_usuario(old)=' + ISNULL(d.id_usuario,'') + ' -> (new)=' + ISNULL(i.id_usuario,'') + '; '
+        + 'id_conteudo_trilha(old)=' + ISNULL(d.id_conteudo_trilha,'') + ' -> (new)=' + ISNULL(i.id_conteudo_trilha,''),
+        SYSDATETIME()
+    FROM inserted i
+    FULL OUTER JOIN deleted d ON i.id_conteudo_trilha_usuario = d.id_conteudo_trilha_usuario;
+END;
+GO
+
+/* tb_trilha_usuario trigger */
+IF OBJECT_ID('trg_au_tb_trilha_usuario', 'TR') IS NOT NULL DROP TRIGGER trg_au_tb_trilha_usuario;
+GO
+CREATE TRIGGER trg_au_tb_trilha_usuario
+ON dbo.tb_trilha_usuario
+AFTER INSERT, UPDATE, DELETE
+AS
+BEGIN
+    SET NOCOUNT ON;
+    INSERT INTO dbo.tb_auditoria (nome_tabela, operacao, registro, data_operacao)
+    SELECT
+        'tb_trilha_usuario',
+        CASE WHEN i.id_trilha_usuario IS NOT NULL AND d.id_trilha_usuario IS NULL THEN 'insert'
+             WHEN i.id_trilha_usuario IS NOT NULL AND d.id_trilha_usuario IS NOT NULL THEN 'update'
+             WHEN i.id_trilha_usuario IS NULL AND d.id_trilha_usuario IS NOT NULL THEN 'delete'
+             ELSE 'unknown' END,
+        'id_trilha_usuario=' + ISNULL(COALESCE(i.id_trilha_usuario,d.id_trilha_usuario),'') + '; '
+        + 'id_usuario(old)=' + ISNULL(d.id_usuario,'') + ' -> (new)=' + ISNULL(i.id_usuario,'') + '; '
+        + 'id_trilha(old)=' + ISNULL(d.id_trilha,'') + ' -> (new)=' + ISNULL(i.id_trilha,'') + '; '
+        + 'trilha_concluida_usuario(old)=' + ISNULL(d.trilha_concluida_usuario,'') + ' -> (new)=' + ISNULL(i.trilha_concluida_usuario,''),
+        SYSDATETIME()
+    FROM inserted i
+    FULL OUTER JOIN deleted d ON i.id_trilha_usuario = d.id_trilha_usuario;
+END;
+GO
+
+/* tb_endereco_usuario trigger */
+IF OBJECT_ID('trg_au_tb_endereco_usuario', 'TR') IS NOT NULL DROP TRIGGER trg_au_tb_endereco_usuario;
+GO
+CREATE TRIGGER trg_au_tb_endereco_usuario
+ON dbo.tb_endereco_usuario
+AFTER INSERT, UPDATE, DELETE
+AS
+BEGIN
+    SET NOCOUNT ON;
+    INSERT INTO dbo.tb_auditoria (nome_tabela, operacao, registro, data_operacao)
+    SELECT
+        'tb_endereco_usuario',
+        CASE WHEN i.id_usuario IS NOT NULL AND d.id_usuario IS NULL THEN 'insert'
+             WHEN i.id_usuario IS NOT NULL AND d.id_usuario IS NOT NULL THEN 'update'
+             WHEN i.id_usuario IS NULL AND d.id_usuario IS NOT NULL THEN 'delete'
+             ELSE 'unknown' END,
+        'id_usuario=' + ISNULL(COALESCE(i.id_usuario,d.id_usuario),'') + '; '
+        + 'cep_endereco(old)=' + ISNULL(d.cep_endereco,'') + ' -> (new)=' + ISNULL(i.cep_endereco,'') + '; '
+        + 'logradouro_endereco(old)=' + ISNULL(d.logradouro_endereco,'') + ' -> (new)=' + ISNULL(i.logradouro_endereco,'') + '; '
+        + 'estado_endereco(old)=' + ISNULL(d.estado_endereco,'') + ' -> (new)=' + ISNULL(i.estado_endereco,''),
+        SYSDATETIME()
+    FROM inserted i
+    FULL OUTER JOIN deleted d ON i.id_usuario = d.id_usuario;
+END;
+GO
+
+/* tb_formulario_profissao_usuario trigger */
+IF OBJECT_ID('trg_au_tb_formulario_profissao_usuario', 'TR') IS NOT NULL DROP TRIGGER trg_au_tb_formulario_profissao_usuario;
+GO
+CREATE TRIGGER trg_au_tb_formulario_profissao_usuario
+ON dbo.tb_formulario_profissao_usuario
+AFTER INSERT, UPDATE, DELETE
+AS
+BEGIN
+    SET NOCOUNT ON;
+    INSERT INTO dbo.tb_auditoria (nome_tabela, operacao, registro, data_operacao)
+    SELECT
+        'tb_formulario_profissao_usuario',
+        CASE WHEN i.id_usuario IS NOT NULL AND d.id_usuario IS NULL THEN 'insert'
+             WHEN i.id_usuario IS NOT NULL AND d.id_usuario IS NOT NULL THEN 'update'
+             WHEN i.id_usuario IS NULL AND d.id_usuario IS NOT NULL THEN 'delete'
+             ELSE 'unknown' END,
+        'id_usuario=' + ISNULL(COALESCE(i.id_usuario,d.id_usuario),'') + '; '
+        + 'resposta_pergunta_1(old)=' + ISNULL(d.resposta_pergunta_1,'') + ' -> (new)=' + ISNULL(i.resposta_pergunta_1,'') + '; '
+        + 'resposta_pergunta_2(old)=' + ISNULL(d.resposta_pergunta_2,'') + ' -> (new)=' + ISNULL(i.resposta_pergunta_2,'') + '; '
+        + 'resposta_pergunta_3(old)=' + ISNULL(d.resposta_pergunta_3,'') + ' -> (new)=' + ISNULL(i.resposta_pergunta_3,'') + '; '
+        + 'resposta_pergunta_4(old)=' + ISNULL(d.resposta_pergunta_4,'') + ' -> (new)=' + ISNULL(i.resposta_pergunta_4,'') + '; '
+        + 'resposta_pergunta_5(old)=' + ISNULL(d.resposta_pergunta_5,'') + ' -> (new)=' + ISNULL(i.resposta_pergunta_5,'') + '; '
+        + 'resposta_pergunta_6(old)=' + ISNULL(d.resposta_pergunta_6,'') + ' -> (new)=' + ISNULL(i.resposta_pergunta_6,'') + '; '
+        + 'resposta_pergunta_7(old)=' + ISNULL(d.resposta_pergunta_7,'') + ' -> (new)=' + ISNULL(i.resposta_pergunta_7,'') + '; '
+        + 'resposta_pergunta_8(old)=' + ISNULL(d.resposta_pergunta_8,'') + ' -> (new)=' + ISNULL(i.resposta_pergunta_8,'') + '; '
+        + 'resposta_pergunta_9(old)=' + ISNULL(d.resposta_pergunta_9,'') + ' -> (new)=' + ISNULL(i.resposta_pergunta_9,'') + '; '
+        + 'resposta_pergunta_10(old)=' + ISNULL(d.resposta_pergunta_10,'') + ' -> (new)=' + ISNULL(i.resposta_pergunta_10,'') + '; '
+        + 'profissao_recomendada(old)=' + ISNULL(d.profissao_recomendada,'') + ' -> (new)=' + ISNULL(i.profissao_recomendada,''),
+        SYSDATETIME()
+    FROM inserted i
+    FULL OUTER JOIN deleted d ON i.id_usuario = d.id_usuario;
+END;
+GO
+
+/* =========================
+   Insert procedures (pkg_inserts)
+   ========================= */
+
+/* Procedure: inserir_usuario */
+IF OBJECT_ID('sp_inserir_usuario', 'P') IS NOT NULL DROP PROCEDURE sp_inserir_usuario;
+GO
+CREATE PROCEDURE sp_inserir_usuario
+    @p_id_usuario varchar(36),
+    @p_nome_usuario varchar(255),
+    @p_email_usuario varchar(255),
+    @p_senha_usuario varchar(255),
+    @p_data_nascimento datetime2
+AS
+BEGIN
+    SET NOCOUNT ON;
+    INSERT INTO dbo.tb_usuario (id_usuario, nome_usuario, email_usuario, senha_usuario, data_nascimento_usuario)
+    VALUES (@p_id_usuario, @p_nome_usuario, @p_email_usuario, @p_senha_usuario, @p_data_nascimento);
+END;
+GO
+
+/* Procedure: inserir_trilha */
+IF OBJECT_ID('sp_inserir_trilha', 'P') IS NOT NULL DROP PROCEDURE sp_inserir_trilha;
+GO
+CREATE PROCEDURE sp_inserir_trilha
+    @p_id_trilha varchar(36),
+    @p_nome_trilha varchar(200),
+    @p_quantidade int
+AS
+BEGIN
+    SET NOCOUNT ON;
+    INSERT INTO dbo.tb_trilha (id_trilha, nome_trilha, quantidade_conteudo_trilha)
+    VALUES (@p_id_trilha, @p_nome_trilha, @p_quantidade);
+END;
+GO
+
+/* Procedure: inserir_conteudo_trilha */
+IF OBJECT_ID('sp_inserir_conteudo_trilha', 'P') IS NOT NULL DROP PROCEDURE sp_inserir_conteudo_trilha;
+GO
+CREATE PROCEDURE sp_inserir_conteudo_trilha
+    @p_id_conteudo_trilha varchar(36),
+    @p_nome_conteudo_trilha varchar(200),
+    @p_tipo_conteudo_trilha varchar(20),
+    @p_texto_conteudo_trilha varchar(max),
+    @p_id_trilha varchar(36)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    INSERT INTO dbo.tb_conteudo_trilha (id_conteudo_trilha, nome_conteudo_trilha, tipo_conteudo_trilha, texto_conteudo_trilha, id_trilha)
+    VALUES (@p_id_conteudo_trilha, @p_nome_conteudo_trilha, @p_tipo_conteudo_trilha, @p_texto_conteudo_trilha, @p_id_trilha);
+END;
+GO
+
+/* Procedure: inserir_conteudo_trilha_usuario */
+IF OBJECT_ID('sp_inserir_conteudo_trilha_usuario', 'P') IS NOT NULL DROP PROCEDURE sp_inserir_conteudo_trilha_usuario;
+GO
+CREATE PROCEDURE sp_inserir_conteudo_trilha_usuario
+    @p_id_conteudo_trilha_usuario varchar(36),
+    @p_concluida char(1),
+    @p_id_usuario varchar(36),
+    @p_id_conteudo_trilha varchar(36)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    INSERT INTO dbo.tb_conteudo_trilha_usuario (id_conteudo_trilha_usuario, conteudo_trilha_concluida_usuario, id_usuario, id_conteudo_trilha)
+    VALUES (@p_id_conteudo_trilha_usuario, @p_concluida, @p_id_usuario, @p_id_conteudo_trilha);
+END;
+GO
+
+/* Procedure: inserir_trilha_usuario */
+IF OBJECT_ID('sp_inserir_trilha_usuario', 'P') IS NOT NULL DROP PROCEDURE sp_inserir_trilha_usuario;
+GO
+CREATE PROCEDURE sp_inserir_trilha_usuario
+    @p_id_trilha_usuario varchar(36),
+    @p_id_usuario varchar(36),
+    @p_id_trilha varchar(36),
+    @p_concluida char(1)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    INSERT INTO dbo.tb_trilha_usuario (id_trilha_usuario, id_usuario, id_trilha, trilha_concluida_usuario)
+    VALUES (@p_id_trilha_usuario, @p_id_usuario, @p_id_trilha, @p_concluida);
+END;
+GO
+
+/* Procedure: inserir_endereco_usuario */
+IF OBJECT_ID('sp_inserir_endereco_usuario', 'P') IS NOT NULL DROP PROCEDURE sp_inserir_endereco_usuario;
+GO
+CREATE PROCEDURE sp_inserir_endereco_usuario
+    @p_id_usuario varchar(36),
+    @p_cep varchar(20),
+    @p_logradouro varchar(200),
+    @p_estado varchar(200)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    INSERT INTO dbo.tb_endereco_usuario (id_usuario, cep_endereco, logradouro_endereco, estado_endereco)
+    VALUES (@p_id_usuario, @p_cep, @p_logradouro, @p_estado);
+END;
+GO
+
+/* Procedure: inserir_formulario_profissao */
+IF OBJECT_ID('sp_inserir_formulario_profissao', 'P') IS NOT NULL DROP PROCEDURE sp_inserir_formulario_profissao;
+GO
+CREATE PROCEDURE sp_inserir_formulario_profissao
+    @p_id_usuario varchar(36),
+    @p_p1 varchar(1000), @p_p2 varchar(1000), @p_p3 varchar(1000), @p_p4 varchar(1000), @p_p5 varchar(1000),
+    @p_p6 varchar(1000), @p_p7 varchar(1000), @p_p8 varchar(1000), @p_p9 varchar(1000), @p_p10 varchar(1000),
+    @p_recomendada varchar(100)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    INSERT INTO dbo.tb_formulario_profissao_usuario (
+        id_usuario, resposta_pergunta_1, resposta_pergunta_2, resposta_pergunta_3, resposta_pergunta_4,
+        resposta_pergunta_5, resposta_pergunta_6, resposta_pergunta_7, resposta_pergunta_8,
+        resposta_pergunta_9, resposta_pergunta_10, profissao_recomendada
+    )
+    VALUES (
+        @p_id_usuario, @p_p1, @p_p2, @p_p3, @p_p4, @p_p5, @p_p6, @p_p7, @p_p8, @p_p9, @p_p10, @p_recomendada
+    );
+END;
+GO
+
+/* =========================
+   Functions / utilities (converted)
+   - fn_to_json_trilhas_usuario_resumido -> sp_get_trilhas_usuario_resumido (@id_usuario)
+   - fn_validar_usuario_e_progresso -> sp_validar_usuario_e_progresso (@id_usuario)
+   ========================= */
+
+/* Procedure: get trilhas resumo do usu√°rio (retorna JSON) */
+IF OBJECT_ID('sp_get_trilhas_usuario_resumido', 'P') IS NOT NULL DROP PROCEDURE sp_get_trilhas_usuario_resumido;
+GO
+CREATE PROCEDURE sp_get_trilhas_usuario_resumido
+    @p_id_usuario varchar(36)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    -- Validate user exists
+    IF NOT EXISTS (SELECT 1 FROM dbo.tb_usuario WHERE id_usuario = @p_id_usuario)
+    BEGIN
+        SELECT '{"error":"Usu√°rio n√£o encontrado"}' AS jsonResult;
+        RETURN;
+    END
+
+    SELECT
+        u.id_usuario   AS id_usuario,
+        u.nome_usuario AS nome,
+        u.email_usuario AS email,
+        (
+            SELECT
+                t.id_trilha AS id_trilha,
+                t.nome_trilha AS nome,
+                t.quantidade_conteudo_trilha AS quantidade_conteudos,
+                ISNULL(tu.trilha_concluida_usuario, 'N') AS trilha_concluida
+            FROM dbo.tb_trilha_usuario tu
+            INNER JOIN dbo.tb_trilha t ON t.id_trilha = tu.id_trilha
+            WHERE tu.id_usuario = @p_id_usuario
+            ORDER BY t.nome_trilha
+            FOR JSON PATH
+        ) AS trilhas
+    FROM dbo.tb_usuario u
+    WHERE u.id_usuario = @p_id_usuario
+    FOR JSON PATH, WITHOUT_ARRAY_WRAPPER;
+END;
+GO
+
+/* Procedure: validar usuario e progresso (retorna JSON com contagens e percentuais) */
+IF OBJECT_ID('sp_validar_usuario_e_progresso', 'P') IS NOT NULL DROP PROCEDURE sp_validar_usuario_e_progresso;
+GO
+CREATE PROCEDURE sp_validar_usuario_e_progresso
+    @p_id_usuario varchar(36)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    IF @p_id_usuario IS NULL OR LEN(@p_id_usuario) = 0
+    BEGIN
+        SELECT '{"error":"ID do usu√°rio n√£o est√° em formato UUID v√°lido."}' AS jsonResult;
+        RETURN;
+    END
+
+    IF NOT EXISTS (SELECT 1 FROM dbo.tb_usuario WHERE id_usuario = @p_id_usuario)
+    BEGIN
+        SELECT '{"error":"Usu√°rio n√£o encontrado no sistema."}' AS jsonResult;
+        RETURN;
+    END
+
+    DECLARE @v_total_trilhas int = 0,
+            @v_total_trilhas_conc int = 0,
+            @v_percentual_trilhas int = 0,
+            @v_total_conteudos int = 0,
+            @v_total_conteudos_conc int = 0;
+
+    SELECT @v_total_trilhas = COUNT(*) FROM dbo.tb_trilha_usuario WHERE id_usuario = @p_id_usuario;
+    SELECT @v_total_trilhas_conc = COUNT(*) FROM dbo.tb_trilha_usuario WHERE id_usuario = @p_id_usuario AND trilha_concluida_usuario = 'S';
+
+    SELECT @v_total_conteudos = COUNT(*) FROM dbo.tb_conteudo_trilha_usuario WHERE id_usuario = @p_id_usuario;
+    SELECT @v_total_conteudos_conc = COUNT(*) FROM dbo.tb_conteudo_trilha_usuario WHERE id_usuario = @p_id_usuario AND conteudo_trilha_concluida_usuario = 'S';
+
+    IF @v_total_trilhas > 0
+        SET @v_percentual_trilhas = (@v_total_trilhas_conc * 100) / @v_total_trilhas;
+    ELSE
+        SET @v_percentual_trilhas = 0;
+
+    /* Build result as JSON */
+    SELECT
+        @p_id_usuario AS id_usuario,
+        (SELECT nome_usuario FROM dbo.tb_usuario WHERE id_usuario = @p_id_usuario) AS nome,
+        (SELECT email_usuario FROM dbo.tb_usuario WHERE id_usuario = @p_id_usuario) AS email,
+        (
+            SELECT
+                @v_total_trilhas AS total,
+                @v_total_trilhas_conc AS concluidas,
+                @v_percentual_trilhas AS percentual
+            FOR JSON PATH, WITHOUT_ARRAY_WRAPPER
+        ) AS progresso_trilhas,
+        (
+            SELECT
+                @v_total_conteudos AS total,
+                @v_total_conteudos_conc AS concluidos
+            FOR JSON PATH, WITHOUT_ARRAY_WRAPPER
+        ) AS progresso_conteudos
+    FOR JSON PATH, WITHOUT_ARRAY_WRAPPER;
+END;
+GO
+
+/* Procedure: prc_gerar_json_trilhas_todos -> prints/returns a JSON array of all users -> using FOR JSON PATH */
+IF OBJECT_ID('sp_gerar_json_trilhas_todos', 'P') IS NOT NULL DROP PROCEDURE sp_gerar_json_trilhas_todos;
+GO
+CREATE PROCEDURE sp_gerar_json_trilhas_todos
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT
+        u.id_usuario,
+        u.nome_usuario AS nome,
+        u.email_usuario AS email,
+        (
+            SELECT
+                t.id_trilha AS id_trilha,
+                t.nome_trilha AS nome,
+                t.quantidade_conteudo_trilha AS quantidade_conteudos,
+                ISNULL(tu.trilha_concluida_usuario,'N') AS trilha_concluida
+            FROM dbo.tb_trilha_usuario tu
+            INNER JOIN dbo.tb_trilha t ON t.id_trilha = tu.id_trilha
+            WHERE tu.id_usuario = u.id_usuario
+            ORDER BY t.nome_trilha
+            FOR JSON PATH
+        ) AS trilhas
+    FROM dbo.tb_usuario u
+    ORDER BY u.nome_usuario
+    FOR JSON PATH;
+END;
+GO
+
+/* =========================
+   Sample data insertion (converted inserts)
+   replacing sys_guid() -> NEWID(), systimestamp -> SYSDATETIME()
+   NOTE: In original Oracle file there are many block inserts using pkg_inserts procedures.
+   We'll provide an equivalent T-SQL block that uses the procedures above.
+   You can uncomment and run to populate sample data.
+   ========================= */
+
+/* Example population block - adapt GUIDs as necessary */
+/*
+EXEC sp_inserir_trilha 'f0c9f1b4-0cc9-44b3-b3da-7e51d241a4f5', 'Introdu√ß√£o ao Futuro do Trabalho', 3;
+EXEC sp_inserir_trilha '4c9eaa09-e28f-4f8f-a887-6b23fd2d1303', 'Intelig√™ncia Artificial Aplicada', 3;
+EXEC sp_inserir_trilha '0a170d80-cb63-4bb7-83d5-2a46f58fcd88', 'Habilidades Digitais Essenciais', 3;
+-- ... continue inserting trilhas ...
+
+EXEC sp_inserir_usuario 'b0a5f2e7-879c-4a13-82ab-71f1b716de11','Ana Silva','ana@email.com','senha1', SYSDATETIME();
+EXEC sp_inserir_usuario '5e5fc7b4-863d-4e8a-b0bb-c93a4360f972','Jo√£o Prado','joao@email.com','senha2', SYSDATETIME();
+-- ... continue inserting users ...
+*/
+
+/* =========================
+   Utilities: sample select using the JSON procs
+   ========================= */
+/*
+-- Get one user summary as JSON
+EXEC sp_get_trilhas_usuario_resumido 'b0a5f2e7-879c-4a13-82ab-71f1b716de11';
+
+-- Get progress JSON for a user
+EXEC sp_validar_usuario_e_progresso 'b0a5f2e7-879c-4a13-82ab-71f1b716de11';
+
+-- Generate all users trilhas JSON
+EXEC sp_gerar_json_trilhas_todos;
+*/
+
+-- End of conversion script
