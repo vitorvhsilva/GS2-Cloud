@@ -144,7 +144,13 @@ az sql server firewall-rule create --resource-group skillshift-rg --server skill
 
 az webapp config appsettings set --name skillshift-api --resource-group skillshift-rg --settings DB_URL="jdbc:sqlserver://skillshiftsqlserver.database.windows.net:1433;database=SkillShiftDB;encrypt=true;trustServerCertificate=false;hostNameInCertificate=*.database.windows.net;loginTimeout=30;" DB_USERNAME="sqladmin" DB_PASSWORD=SenhaForte!123 
 
-az webapp deploy --resource-group skillshift-rg --name skillshift-api --src-path ./users-0.0.1-SNAPSHOT.jar --type jar
+```
+Antes de dar o deploy certifique que esta dentro da pasta GlobalSolutionJava
+
+```
+
+az webapp deploy --resource-group skillshift-rg --name skillshift-api --src-path "./target/GlobalSolutionJava-0.0.1-SNAPSHOT.jar" --type jar
+
 ```
 
 Para rodar o projeto local: 
