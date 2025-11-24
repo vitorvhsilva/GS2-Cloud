@@ -1,5 +1,10 @@
 # SkillShift — A Plataforma que Prepara Pessoas para o Futuro do Trabalho
 
+## Participantes
+### Brendon Brasil - RM559196
+### João Ganança - RM556405
+### Vitor Hugo - RM558961
+
 ## O que é o SkillShift?
 
 O **SkillShift** é uma plataforma simples, acessível e objetiva que concentra conteúdos curados — **vídeos e artigos** — organizados em trilhas de aprendizagem criadas para preparar jovens e profissionais para o **mercado do futuro**.
